@@ -1,11 +1,46 @@
 # PSBinaryModule
 
-[![CI](https://github.com/yourusername/PSBinaryModule/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/PSBinaryModule/actions/workflows/ci.yml)
-[![Release](https://github.com/yourusername/PSBinaryModule/actions/workflows/release.yml/badge.svg)](https://github.com/yourusername/PSBinaryModule/actions/workflows/release.yml)
+[![CI](https://github.com/WarehouseFinds/PSBinaryModule/actions/workflows/ci.yml/badge.svg)](https://github.com/WarehouseFinds/PSBinaryModule/actions/workflows/ci.yml)
+[![Release](https://github.com/WarehouseFinds/PSBinaryModule/actions/workflows/release.yml/badge.svg)](https://github.com/WarehouseFinds/PSBinaryModule/actions/workflows/release.yml)
 [![PowerShell Gallery](https://img.shields.io/powershellgallery/v/PSBinaryModule.svg)](https://www.powershellgallery.com/packages/PSBinaryModule)
-[![License](https://img.shields.io/github/license/yourusername/PSBinaryModule.svg)](LICENSE)
+[![License](https://img.shields.io/github/license/WarehouseFinds/PSBinaryModule.svg)](LICENSE)
 
 A production-ready PowerShell binary module template with complete CI/CD pipeline, unit testing, and development container support.
+
+## 💡 Why This Template?
+
+Most PowerShell module repositories start the same way: a few CMDlets, some manual testing, and CI/CD added later—often inconsistently. This template flips that model.
+
+**PSBinaryModule is opinionated by design.**
+It gives you a complete, production-grade foundation so you can focus on writing PowerShell code—not wiring pipelines.
+
+### What makes it different?
+
+- **CI/CD from day one**
+  Build, test, analyze, version, and publish automatically using GitHub Actions.
+
+- **Best practices baked in**
+  Module structure, testing, security scanning, and documentation follow proven PowerShell and DevOps conventions.
+
+- **Automation over ceremony**
+  Versioning, changelogs, releases, and publishing happen automatically based on your commits and pull requests.
+
+- **Works everywhere**
+  Tested on Windows, Linux, and macOS, with optional devcontainer support for consistent environments.
+
+- **Scales with your project**
+  Suitable for prototypes, internal tooling, and fully open-source modules published to the PowerShell Gallery.
+
+If you’ve ever thought *“I just want to write PowerShell, not build pipelines”*, this template is for you.
+
+## 🎬 How to Use This Template
+
+1. Click the "Use PowerShell Module Template" button below or use GitHub's "Use this template" button
+1. Fill in your module name and description
+1. Wait **about 20 seconds** for the automated bootstrap workflow to complete
+1. **Refresh the page** to see your customized repository
+
+[![](https://img.shields.io/badge/Use%20Powershell%20Template-%E2%86%92-1f883d?style=for-the-badge&logo=github&labelColor=197935)](https://github.com/new?template_owner=WarehouseFinds&template_name=PSBinaryModule&owner=%40me&name=MyProject&description=PS%20Module%20Template&visibility=public)
 
 ## Features
 
@@ -33,7 +68,7 @@ A production-ready PowerShell binary module template with complete CI/CD pipelin
 Install-Module -Name PSBinaryModule -Scope CurrentUser
 
 # Or install from source
-git clone https://github.com/yourusername/PSBinaryModule.git
+git clone https://github.com/yourusername/yourmodulename.git
 cd PSBinaryModule
 pwsh -Command "Invoke-Build"
 ```
@@ -44,42 +79,11 @@ pwsh -Command "Invoke-Build"
 # Build the module
 Invoke-Build
 
-# Build with specific version
-Invoke-Build -SemanticVersion "1.2.3"
-
 # Run tests
 Invoke-Build -Task Test
 
 # Clean build artifacts
 Invoke-Build -Task Clean
-```
-
-## Usage
-
-### Get Module Metadata
-
-```powershell
-# Get basic metadata
-Get-BinaryModuleMetadata
-
-# Get detailed metadata
-Get-BinaryModuleMetadata -Detailed
-```
-
-### Convert Bytes to Human-Readable Size
-
-```powershell
-# Convert bytes to MB
-ConvertTo-HumanReadableSize -Bytes 1048576
-# Output: 1.00 MB
-
-# Use pipeline
-2048 | ConvertTo-HumanReadableSize
-# Output: 2.00 KB
-
-# Custom precision
-ConvertTo-HumanReadableSize -Bytes 1536 -Precision 1
-# Output: 1.5 KB
 ```
 
 ## Development
@@ -164,6 +168,7 @@ This template includes two GitHub Actions workflows:
 ### CI Workflow
 
 Runs on every push and pull request:
+
 - Builds the module on Windows, Linux, and macOS
 - Runs C# unit tests with code coverage
 - Runs PowerShell integration tests
@@ -172,6 +177,7 @@ Runs on every push and pull request:
 ### Release Workflow
 
 Runs on pushes to main branch:
+
 - Determines semantic version using GitVersion
 - Builds and tests the module
 - Creates a GitHub release
@@ -190,6 +196,7 @@ To enable automatic publishing to PowerShell Gallery:
 ### GitVersion
 
 Versioning is controlled by `GitVersion.yml`. The default configuration:
+
 - `main` branch: Minor version increment
 - `release/*` branches: Patch version with beta tag
 - `feature/*` branches: Minor version with alpha tag
