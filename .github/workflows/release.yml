@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       force-publish:
-        description: 'Force publish to PSGallery'
+        description: 'Publish to PSGallery'
         required: false
         default: false
         type: boolean
@@ -34,16 +34,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v3.0.0
+      - name: Install GitVersion tool
+        uses: gittools/actions/gitversion/setup@d0139503a9321f76b4a417dfdc8aebcec24decdd
         with:
-          versionSpec: '6.x'
+          versionSpec: '6.5.1'
 
-      - name: Determine Version
+      - name: Get semantic build version
         id: gitversion
-        uses: gittools/actions/gitversion/execute@v3.0.0
+        uses: gittools/actions/gitversion/execute@d0139503a9321f76b4a417dfdc8aebcec24decdd
         with:
-          useConfigFile: true
+          configFilePath: GitVersion.yml
+          disableShallowCloneCheck: true
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -70,7 +71,7 @@ jobs:
             ## Changes in this Release
             - Version: ${{ steps.gitversion.outputs.semVer }}
             - Commit: ${{ github.sha }}
-            
+
             See [CHANGELOG.md](CHANGELOG.md) for detailed changes.
           artifacts: "build/out/PSBinaryModule/**/*"
           draft: false
