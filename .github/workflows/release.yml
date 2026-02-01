@@ -62,7 +62,7 @@ jobs:
           Invoke-Build -Task Build, Test -SemanticVersion ${{ steps.gitversion.outputs.semVer }} -Configuration Release
 
       - name: Create GitHub Release
-        if: github.event_name == 'push' || github.event.inputs.force-publish == 'true'
+        if: github.event_name == 'workflow_dispatch'
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ steps.gitversion.outputs.semVer }}
@@ -78,13 +78,13 @@ jobs:
           prerelease: ${{ steps.gitversion.outputs.preReleaseLabel != '' }}
 
       - name: Publish to PowerShell Gallery
-        if: (github.event_name == 'push' || github.event.inputs.force-publish == 'true') && steps.gitversion.outputs.preReleaseLabel == ''
+        if: (github.event_name == 'workflow_dispatch' || github.event.inputs.publish-psgallery == 'true')
         shell: pwsh
         env:
-          NUGET_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
         run: |
-          if ([string]::IsNullOrEmpty($env:NUGET_API_KEY)) {
+          if ([string]::IsNullOrEmpty($env:PSGALLERY_API_KEY)) {
             Write-Warning "PSGallery API key not found. Skipping publish."
             exit 0
           }
-          Invoke-Build -Task Publish -NugetApiKey $env:NUGET_API_KEY
+          Invoke-Build -Task Publish -NugetApiKey $env:PSGALLERY_API_KEY
