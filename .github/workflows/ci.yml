@@ -67,11 +67,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Run C# unit tests
-        run: |
-          dotnet test --configuration Release --no-build --verbosity normal \
-            --logger "trx;LogFileName=unit-tests.trx" \
-            --collect "XPlat Code Coverage" \
-            --results-directory ./test-results
+        run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=unit-tests.trx" --collect "XPlat Code Coverage" --results-directory ./test-results
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
