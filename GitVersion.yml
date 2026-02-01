@@ -1,44 +1,6 @@
-mode: ContinuousDeployment
-branches:
-  main:
-    tag: ''
-    increment: Minor
-    prevent-increment-of-merged-branch-version: true
-    track-merge-target: false
-    regex: ^main$
-    source-branches: []
-  release:
-    tag: beta
-    increment: Patch
-    prevent-increment-of-merged-branch-version: true
-    track-merge-target: false
-    regex: ^releases?[/-]
-    source-branches:
-    - main
-  feature:
-    tag: alpha.{BranchName}
-    increment: Minor
-    prevent-increment-of-merged-branch-version: false
-    track-merge-target: false
-    regex: ^features?[/-]
-    source-branches:
-    - main
-  pull-request:
-    tag: pr.{BranchName}
-    increment: Inherit
-    prevent-increment-of-merged-branch-version: false
-    track-merge-target: false
-    regex: ^(pull|pull\-requests|pr)[/-]
-    source-branches:
-    - main
-  hotfix:
-    tag: hotfix
-    increment: Patch
-    prevent-increment-of-merged-branch-version: false
-    track-merge-target: false
-    regex: ^hotfix(es)?[/-]
-    source-branches:
-    - main
-ignore:
-  sha: []
-merge-message-formats: {}
+workflow: GitHubFlow/v1
+tag-prefix: '[vV]?'
+major-version-bump-message: \+semver:\s?(breaking|major)
+minor-version-bump-message: \+semver:\s?(feature|minor)
+patch-version-bump-message: \+semver:\s?(fix|patch)
+no-bump-message: \+semver:\s?(none|skip)

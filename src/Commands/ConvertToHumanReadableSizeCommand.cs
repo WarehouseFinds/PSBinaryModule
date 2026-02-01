@@ -52,7 +52,18 @@ namespace PSBinaryModule.Commands
                 size /= 1024;
             }
 
-            string result = $"{size.ToString($"F{Precision}")} {sizes[order]}";
+            var decimalSize = (decimal)size;
+            if (Precision > 0)
+            {
+                var factor = (decimal)Math.Pow(10, Precision);
+                decimalSize = Math.Truncate(decimalSize * factor) / factor;
+            }
+            else
+            {
+                decimalSize = Math.Truncate(decimalSize);
+            }
+
+            string result = $"{decimalSize.ToString($"F{Precision}")} {sizes[order]}";
             WriteObject(result);
         }
     }
