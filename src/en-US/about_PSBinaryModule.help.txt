@@ -1,0 +1,47 @@
+TOPIC
+    about_PSBinaryModule
+
+SHORT DESCRIPTION
+    PSBinaryModule is a PowerShell binary module template with complete CI/CD
+    pipeline, unit testing, and development container support.
+
+LONG DESCRIPTION
+    PSBinaryModule provides a production-ready template for creating PowerShell
+    binary modules using C#. It includes:
+
+    - Complete CI/CD pipeline with GitHub Actions
+    - Unit testing with xUnit
+    - Code coverage reporting
+    - Static code analysis
+    - Development container support
+    - Cross-platform compatibility (Windows, Linux, macOS)
+    - Automated versioning with GitVersion
+    - PowerShell Gallery publishing workflow
+
+EXAMPLES
+    Example 1: Get module metadata
+    -------------------------------
+    Get-BinaryModuleMetadata
+
+    This command retrieves basic metadata about the PSBinaryModule.
+
+    Example 2: Get detailed metadata
+    ---------------------------------
+    Get-BinaryModuleMetadata -Detailed
+
+    This command retrieves detailed metadata including PowerShell version,
+    .NET version, and CLR version.
+
+    Example 3: Convert bytes to human-readable format
+    --------------------------------------------------
+    ConvertTo-HumanReadableSize -Bytes 1048576
+
+    This command converts 1048576 bytes to "1.00 MB".
+
+KEYWORDS
+    Binary, Module, Template, CI/CD, Testing
+
+SEE ALSO
+    Get-BinaryModuleMetadata
+    ConvertTo-HumanReadableSize
+    about_Modules

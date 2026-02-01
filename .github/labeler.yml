@@ -1,0 +1,33 @@
+# Configuration for labeler - https://github.com/actions/labeler
+
+'area: cmdlets':
+  - changed-files:
+    - any-glob-to-any-file: 'src/Commands/**'
+
+'area: tests':
+  - changed-files:
+    - any-glob-to-any-file: 'tests/**'
+
+'area: ci/cd':
+  - changed-files:
+    - any-glob-to-any-file: '.github/workflows/**'
+
+'area: build':
+  - changed-files:
+    - any-glob-to-any-file: '*.build.ps1'
+    - any-glob-to-any-file: '*.csproj'
+    - any-glob-to-any-file: '*.sln'
+
+'area: docs':
+  - changed-files:
+    - any-glob-to-any-file: 'docs/**'
+    - any-glob-to-any-file: '*.md'
+
+'area: devcontainer':
+  - changed-files:
+    - any-glob-to-any-file: '.devcontainer/**'
+
+'dependencies':
+  - changed-files:
+    - any-glob-to-any-file: '**/packages.lock.json'
+    - any-glob-to-any-file: '*.csproj'

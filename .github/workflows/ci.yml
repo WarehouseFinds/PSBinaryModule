@@ -1,0 +1,186 @@
+name: CI
+run-name: "${{ github.event.repository.name }} | CI | ${{ github.run_id }} | ${{ github.event_name }}"
+permissions: read-all
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '*.sln'
+      - '*.csproj'
+      - '*.ps1'
+
+  pull_request:
+    branches:
+      - main
+      - 'release/**'
+      - 'hotfix/**'
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '.github/**/*'
+      - '*.sln'
+      - '*.csproj'
+      - '*.ps1'
+
+jobs:
+  changes:
+    name: Label Changes
+    runs-on: [ubuntu-latest]
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+    - name: Labeler
+      id: labeler
+      uses: actions/labeler@634933edcd8ababfe52f92936142cc22ac488b1b #v6.0.1
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    permissions:
+      issues: write
+      pull-requests: write
+      checks: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run C# unit tests
+        run: |
+          dotnet test --configuration Release --no-build --verbosity normal \
+            --logger "trx;LogFileName=unit-tests.trx" \
+            --collect "XPlat Code Coverage" \
+            --results-directory ./test-results
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}
+          path: test-results/
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always() && matrix.os == 'ubuntu-latest'
+        with:
+          files: test-results/**/*.trx
+          check_name: Unit Test Results
+
+  build:
+    name: Build
+    needs: [unit-tests]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      release-version: ${{ steps.gitversion.outputs.semVer }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v3.0.0
+        with:
+          versionSpec: '6.x'
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v3.0.0
+        with:
+          useConfigFile: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup PowerShell
+        shell: pwsh
+        run: |
+          Install-PSResource -Name InvokeBuild -TrustRepository -AcceptLicense
+
+      - name: Build Module
+        shell: pwsh
+        run: |
+          Invoke-Build -Task Build -SemanticVersion ${{ steps.gitversion.outputs.semVer }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PSBinaryModule
+          path: build/out/PSBinaryModule/
+
+  integration-tests:
+    name: Integration Tests
+    needs: [build]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    permissions:
+      checks: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: PSBinaryModule
+          path: build/out/PSBinaryModule
+
+      - name: Setup PowerShell
+        shell: pwsh
+        run: |
+          Install-PSResource -Name Pester -TrustRepository -AcceptLicense
+
+      - name: Run Integration Tests
+        shell: pwsh
+        run: |
+          $config = New-PesterConfiguration @{
+              Run        = @{
+                  Path     = './tests/Integration'
+                  PassThru = $true
+              }
+              TestResult = @{
+                  Enabled      = $true
+                  OutputFormat = 'NUnitXml'
+                  OutputPath   = './test-results/integration-tests.xml'
+              }
+              Filter     = @{
+                  Tag = 'Integration'
+              }
+              Output     = @{
+                  Verbosity = 'Detailed'
+              }
+          }
+          Invoke-Pester -Configuration $config
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results-${{ matrix.os }}
+          path: test-results/

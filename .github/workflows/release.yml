@@ -1,0 +1,89 @@
+name: Release
+run-name: "${{ github.event.repository.name }} | Release | ${{ github.run_id }}"
+permissions: read-all
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '*.sln'
+      - '*.csproj'
+
+  workflow_dispatch:
+    inputs:
+      force-publish:
+        description: 'Force publish to PSGallery'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v3.0.0
+        with:
+          versionSpec: '6.x'
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v3.0.0
+        with:
+          useConfigFile: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup PowerShell
+        shell: pwsh
+        run: |
+          Install-PSResource -Name InvokeBuild, Pester -TrustRepository -AcceptLicense
+
+      - name: Build Module
+        shell: pwsh
+        run: |
+          Invoke-Build -Task Build, Test -SemanticVersion ${{ steps.gitversion.outputs.semVer }} -Configuration Release
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' || github.event.inputs.force-publish == 'true'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.gitversion.outputs.semVer }}
+          name: Release v${{ steps.gitversion.outputs.semVer }}
+          body: |
+            ## Changes in this Release
+            - Version: ${{ steps.gitversion.outputs.semVer }}
+            - Commit: ${{ github.sha }}
+            
+            See [CHANGELOG.md](CHANGELOG.md) for detailed changes.
+          artifacts: "build/out/PSBinaryModule/**/*"
+          draft: false
+          prerelease: ${{ steps.gitversion.outputs.preReleaseLabel != '' }}
+
+      - name: Publish to PowerShell Gallery
+        if: (github.event_name == 'push' || github.event.inputs.force-publish == 'true') && steps.gitversion.outputs.preReleaseLabel == ''
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: |
+          if ([string]::IsNullOrEmpty($env:NUGET_API_KEY)) {
+            Write-Warning "PSGallery API key not found. Skipping publish."
+            exit 0
+          }
+          Invoke-Build -Task Publish -NugetApiKey $env:NUGET_API_KEY

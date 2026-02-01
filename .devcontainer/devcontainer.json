@@ -1,0 +1,87 @@
+{
+  "name": "PowerShell-PSBinaryModule",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:1-9.0",
+
+  "features": {
+    "ghcr.io/devcontainers/features/powershell:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        // Set default terminals
+        "terminal.integrated.enablePersistentSessions": false,
+        "terminal.integrated.defaultProfile.linux": "pwsh",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "bash"
+          },
+          "pwsh": {
+            "path": "pwsh"
+          }
+        },
+
+        // Workspace settings
+        "workbench.startupEditor": "none",
+
+        // GitHub Copilot
+        "github.copilot.chat.enableTerminalIntegration": true,
+
+        // PowerShell extension
+        "powershell.integratedConsole.showOnStartup": false,
+        "powershell.startAsLoginShell.linux": false,
+
+        // C# extension
+        "dotnet.defaultSolution": "PSBinaryModule.sln",
+        "omnisharp.enableEditorConfigSupport": true,
+        "omnisharp.enableRoslynAnalyzers": true,
+
+        // Test Explorer
+        "dotnet-test-explorer.testProjectPath": "**/*.Tests.csproj",
+
+        // Disable extension recommendations
+        "extensions.ignoreRecommendations": true
+      },
+
+      "extensions": [
+        "ms-vscode.powershell",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "pspester.pester-test",
+        "editorconfig.editorconfig",
+        "DavidAnson.vscode-markdownlint"
+      ],
+
+      "remote.extensionKind": {
+        "github.copilot": [ "ui" ],
+        "github.copilot-chat": [ "ui" ],
+        "github.vscode-github-actions": [ "ui" ]
+      }
+    }
+  },
+
+  // Install PowerShell modules on container creation
+  "onCreateCommand": "pwsh -NoProfile -Command 'Install-PSResource -Name InvokeBuild, Pester -TrustRepository -AcceptLicense -Verbose'",
+
+  // Restore .NET dependencies after container starts
+  "postStartCommand": "dotnet restore",
+
+  // Confirmation message
+  "postAttachCommand": "pwsh -NoProfile -Command 'Write-Host \"Dev container ready. .NET SDK $(dotnet --version) and PowerShell $($PSVersionTable.PSVersion) available.\"'",
+
+  "waitFor": "postAttachCommand",
+
+  // Mount git config and GitHub CLI config
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.config/gh,target=/home/vscode/.config/gh,type=bind,consistency=cached"
+  ],
+
+  "remoteUser": "vscode"
+}
