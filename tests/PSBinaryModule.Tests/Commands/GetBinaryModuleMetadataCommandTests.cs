@@ -11,6 +11,7 @@ public class GetBinaryModuleMetadataCommandTests
     {
         // Arrange
         using var ps = PowerShell.Create();
+        TestModuleLoader.ImportModule(ps);
         ps.AddCommand("Get-BinaryModuleMetadata");
 
         // Act
@@ -33,6 +34,7 @@ public class GetBinaryModuleMetadataCommandTests
     {
         // Arrange
         using var ps = PowerShell.Create();
+        TestModuleLoader.ImportModule(ps);
         ps.AddCommand("Get-BinaryModuleMetadata")
           .AddParameter("Detailed");
 
@@ -54,6 +56,7 @@ public class GetBinaryModuleMetadataCommandTests
     {
         // Arrange
         using var ps = PowerShell.Create();
+        TestModuleLoader.ImportModule(ps);
         ps.AddCommand("Get-BinaryModuleMetadata");
 
         // Act

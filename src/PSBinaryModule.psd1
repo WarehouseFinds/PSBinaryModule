@@ -1,30 +1,30 @@
 @{
     # Script module or binary module file associated with this manifest.
-    RootModule = 'PSBinaryModule.dll'
+    RootModule           = 'PSBinaryModule.dll'
 
     # Version number of this module.
-    ModuleVersion = '0.1.0'
+    ModuleVersion        = '0.0.1'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Desktop', 'Core')
 
     # ID used to uniquely identify this module
-    GUID = '12345678-1234-1234-1234-123456789012'
+    GUID                 = 'd3b5f8e2-1c2a-4f5e-9f7a-123456789abc'
 
     # Author of this module
-    Author = 'Your Name'
+    Author               = 'WarehouseFinds'
 
     # Company or vendor of this module
-    CompanyName = 'Your Company'
+    CompanyName          = 'WarehouseFinds'
 
     # Copyright statement for this module
-    Copyright = '(c) 2026 Your Name. All rights reserved.'
+    Copyright            = '(c) 2026 WarehouseFinds. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description = 'A PowerShell binary module template with complete CI/CD pipeline, unit testing, and development container support.'
+    Description          = 'A PowerShell binary module template with complete CI/CD pipeline, unit testing, and development container support.'
 
     # Minimum version of the PowerShell engine required by this module
-    PowerShellVersion = '5.1'
+    PowerShellVersion    = '7.4'
 
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''
@@ -54,25 +54,25 @@
     # TypesToProcess = @()
 
     # Format files (.ps1xml) to be loaded when importing this module
-    FormatsToProcess = @('PSBinaryModule.Format.ps1xml')
+    FormatsToProcess     = @('PSBinaryModule.Format.ps1xml')
 
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
     # NestedModules = @()
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = @()
+    FunctionsToExport    = @()
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-    CmdletsToExport = @(
+    CmdletsToExport      = @(
         'Get-BinaryModuleMetadata',
         'ConvertTo-HumanReadableSize'
     )
 
     # Variables to export from this module
-    VariablesToExport = '*'
+    VariablesToExport    = '*'
 
     # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-    AliasesToExport = @()
+    AliasesToExport      = @()
 
     # DSC resources to export from this module
     # DscResourcesToExport = @()
@@ -84,18 +84,18 @@
     # FileList = @()
 
     # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
-    PrivateData = @{
+    PrivateData          = @{
 
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags = @('PSEdition_Desktop', 'PSEdition_Core', 'Windows', 'Linux', 'MacOS', 'Binary', 'Template')
+            Tags         = @('PSEdition_Desktop', 'PSEdition_Core', 'Windows', 'Linux', 'MacOS', 'Binary', 'Template')
 
             # A URL to the license for this module.
-            LicenseUri = 'https://github.com/yourusername/PSBinaryModule/blob/main/LICENSE'
+            LicenseUri   = 'https://github.com/yourusername/PSBinaryModule/blob/main/LICENSE'
 
             # A URL to the main website for this project.
-            ProjectUri = 'https://github.com/yourusername/PSBinaryModule'
+            ProjectUri   = 'https://github.com/yourusername/PSBinaryModule'
 
             # A URL to an icon representing this module.
             # IconUri = ''

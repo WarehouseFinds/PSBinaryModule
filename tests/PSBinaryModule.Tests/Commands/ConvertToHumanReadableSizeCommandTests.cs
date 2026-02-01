@@ -17,6 +17,7 @@ public class ConvertToHumanReadableSizeCommandTests
     {
         // Arrange
         using var ps = PowerShell.Create();
+        TestModuleLoader.ImportModule(ps);
         ps.AddCommand("ConvertTo-HumanReadableSize")
           .AddParameter("Bytes", bytes);
 
@@ -37,6 +38,7 @@ public class ConvertToHumanReadableSizeCommandTests
     {
         // Arrange
         using var ps = PowerShell.Create();
+        TestModuleLoader.ImportModule(ps);
         ps.AddCommand("ConvertTo-HumanReadableSize")
           .AddParameter("Bytes", bytes)
           .AddParameter("Precision", precision);
@@ -54,6 +56,7 @@ public class ConvertToHumanReadableSizeCommandTests
     {
         // Arrange
         using var ps = PowerShell.Create();
+        TestModuleLoader.ImportModule(ps);
         ps.AddScript("1048576 | ConvertTo-HumanReadableSize");
 
         // Act
@@ -69,6 +72,7 @@ public class ConvertToHumanReadableSizeCommandTests
     {
         // Arrange
         using var ps = PowerShell.Create();
+        TestModuleLoader.ImportModule(ps);
         ps.AddScript("1024, 2048, 3072 | ConvertTo-HumanReadableSize");
 
         // Act
