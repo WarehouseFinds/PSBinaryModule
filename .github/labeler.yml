@@ -23,12 +23,6 @@ build:
     - any-glob-to-any-file: '*.csproj'
     - any-glob-to-any-file: '*.sln'
 
-ci-cd:
-  - changed-files:
-    - any-glob-to-any-file:
-      - '.github/workflows/**/*.yml'
-      - '.github/workflows/**/*.yaml'
-
 vscode:
   - changed-files:
     - any-glob-to-any-file: '.vscode/**/*'
