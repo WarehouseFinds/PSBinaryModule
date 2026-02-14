@@ -20,8 +20,7 @@ Describe 'PSBinaryModule Integration Tests' -Tag 'Integration' {
 
         It 'Should export the expected cmdlets' {
             $commands = Get-Command -Module PSBinaryModule
-            $commands.Name | Should -Contain 'Get-BinaryModuleMetadata'
-            $commands.Name | Should -Contain 'ConvertTo-HumanReadableSize'
+            $commands.Name | Should -Contain 'Get-SystemLocale'
         }
 
         It 'Should have correct module version' {
@@ -30,72 +29,21 @@ Describe 'PSBinaryModule Integration Tests' -Tag 'Integration' {
         }
     }
 
-    Context 'Get-BinaryModuleMetadata' {
-        It 'Should return metadata object' {
-            $result = Get-BinaryModuleMetadata
+    Context 'Get-SystemLocale' {
+        It 'Should return a locale string' {
+            $result = Get-SystemLocale
             $result | Should -Not -BeNullOrEmpty
-            $result.Name | Should -Be 'PSBinaryModule'
+            $result | Should -BeOfType ([string])
         }
 
-        It 'Should return basic metadata by default' {
-            $result = Get-BinaryModuleMetadata
-            $result.Name | Should -Not -BeNullOrEmpty
-            $result.Version | Should -Not -BeNullOrEmpty
-            $result.Author | Should -Not -BeNullOrEmpty
-            $result.PowerShellVersion | Should -BeNullOrEmpty
-        }
+        It 'Should return locale in normalized format' {
+            $result = Get-SystemLocale
 
-        It 'Should return detailed metadata when requested' {
-            $result = Get-BinaryModuleMetadata -Detailed
-            $result.PowerShellVersion | Should -Not -BeNullOrEmpty
-            $result.DotNetVersion | Should -Not -BeNullOrEmpty
-            $result.CLRVersion | Should -Not -BeNullOrEmpty
-        }
-    }
+            $result | Should -Not -Match '_'
+            { [System.Globalization.CultureInfo]::GetCultureInfo($result) } | Should -Not -Throw
 
-    Context 'ConvertTo-HumanReadableSize' {
-        It 'Should convert bytes to KB' {
-            $result = ConvertTo-HumanReadableSize -Bytes 1024
-            $result | Should -Be '1.00 KB'
-        }
-
-        It 'Should convert bytes to MB' {
-            $result = ConvertTo-HumanReadableSize -Bytes 1048576
-            $result | Should -Be '1.00 MB'
-        }
-
-        It 'Should handle pipeline input' {
-            $result = 2048 | ConvertTo-HumanReadableSize
-            $result | Should -Be '2.00 KB'
-        }
-
-        It 'Should accept custom precision' {
-            $result = ConvertTo-HumanReadableSize -Bytes 1536 -Precision 1
-            $result | Should -Be '1.5 KB'
-        }
-
-        It 'Should handle zero bytes' {
-            $result = ConvertTo-HumanReadableSize -Bytes 0
-            $result | Should -Be '0.00 B'
-        }
-
-        It 'Should handle large values' {
-            $result = ConvertTo-HumanReadableSize -Bytes 1099511627776
-            $result | Should -Be '1.00 TB'
-        }
-    }
-
-    Context 'Error Handling' {
-        It 'Should handle negative bytes gracefully' {
-            { ConvertTo-HumanReadableSize -Bytes -1 } | Should -Throw
-        }
-
-        It 'Should handle invalid precision gracefully' {
-            { ConvertTo-HumanReadableSize -Bytes 1024 -Precision -1 } | Should -Throw
-        }
-
-        It 'Should handle precision greater than 10' {
-            { ConvertTo-HumanReadableSize -Bytes 1024 -Precision 11 } | Should -Throw
+            $normalized = [System.Globalization.CultureInfo]::GetCultureInfo($result).Name
+            $result | Should -Be $normalized
         }
     }
 }

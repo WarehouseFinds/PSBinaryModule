@@ -136,3 +136,12 @@ dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggesti
 
 # 'using' directive preferences
 csharp_using_directive_placement = outside_namespace:suggestion
+
+# Analyzer rules as warnings
+dotnet_analyzer_diagnostic.severity = warning
+
+# StyleCop rules as errors
+dotnet_diagnostic.SA*.severity = error
+
+# Roslynator rules as errors
+dotnet_diagnostic.RCS*.severity = error

@@ -86,6 +86,16 @@ Invoke-Build -Task Test
 Invoke-Build -Task Clean
 ```
 
+### Try the Module
+
+```powershell
+# Import the built module
+Import-Module ./build/out/PSBinaryModule/PSBinaryModule.psd1 -Force
+
+# Get system locale as a normalized culture name (for example en-US)
+Get-SystemLocale
+```
+
 ## Development
 
 ### Development Container
@@ -99,7 +109,7 @@ This project includes a development container configuration for Visual Studio Co
 
 ### Project Structure
 
-```
+```text
 PSBinaryModule/
 ├── .devcontainer/          # Development container configuration
 ├── .github/

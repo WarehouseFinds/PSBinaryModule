@@ -41,17 +41,17 @@ Invoke-Build
 
 # Import and test
 Import-Module ./build/out/PSBinaryModule/PSBinaryModule.psd1
-Get-BinaryModuleMetadata
+# Returns a normalized culture name (for example en-US)
+Get-SystemLocale
 ```
 
 ## Project Structure
 
-```
+```text
 PSBinaryModule/
 ├── src/
 │   ├── Commands/                      # Cmdlet implementations
-│   │   ├── GetBinaryModuleMetadataCommand.cs
-│   │   └── ConvertToHumanReadableSizeCommand.cs
+│   │   └── GetSystemLocale.cs
 │   ├── en-US/                         # Help files
 │   │   └── about_PSBinaryModule.help.txt
 │   ├── PSBinaryModule.csproj          # C# project file
@@ -61,8 +61,7 @@ PSBinaryModule/
 ├── tests/
 │   ├── PSBinaryModule.Tests/          # C# unit tests (xUnit)
 │   │   ├── Commands/
-│   │   │   ├── GetBinaryModuleMetadataCommandTests.cs
-│   │   │   └── ConvertToHumanReadableSizeCommandTests.cs
+│   │   │   └── GetSystemLocaleCommandTests.cs
 │   │   └── PSBinaryModule.Tests.csproj
 │   │
 │   └── Integration/                   # PowerShell integration tests (Pester)
@@ -81,6 +80,7 @@ PSBinaryModule/
 ### Basic Cmdlet Structure
 
 Every cmdlet should:
+
 1. Inherit from `PSCmdlet`
 2. Use the `[Cmdlet]` attribute with appropriate verb and noun
 3. Implement `ProcessRecord()` for pipeline processing
@@ -245,8 +245,7 @@ Add your cmdlet to `src/PSBinaryModule.psd1`:
 
 ```powershell
 CmdletsToExport = @(
-    'Get-BinaryModuleMetadata',
-    'ConvertTo-HumanReadableSize',
+    'Get-SystemLocale',
     'Get-MyData'  # Add your new cmdlet
 )
 ```
@@ -354,6 +353,7 @@ Invoke-Pester -Configuration @{
 ### Test Coverage
 
 Aim for:
+
 - **80%+ code coverage** for C# code
 - **100% cmdlet coverage** (all cmdlets have tests)
 - **Integration tests** for all user-facing scenarios
@@ -398,7 +398,8 @@ dotnet clean
 ### Build Output
 
 After building, the module is available at:
-```
+
+```text
 build/out/PSBinaryModule/
 ├── PSBinaryModule.dll           # Compiled assembly
 ├── PSBinaryModule.psd1          # Module manifest
@@ -448,22 +449,25 @@ Get-MyData -Name "Test"
 ### Debugging Tips
 
 1. **Use WriteDebug**: Add debug output in your code
+
    ```csharp
    WriteDebug($"Processing: {Name}");
    ```
 
 2. **Check Pipeline Input**: Verify pipeline objects are correct
+
    ```csharp
    WriteVerbose($"Received pipeline input: {InputObject}");
    ```
 
 3. **Test Error Paths**: Don't just test success scenarios
+
    ```csharp
    try {
        // Risky operation
    }
    catch (Exception ex) {
-       WriteError(new ErrorRecord(ex, "OperationFailed", 
+       WriteError(new ErrorRecord(ex, "OperationFailed",
            ErrorCategory.InvalidOperation, null));
    }
    ```
@@ -473,12 +477,14 @@ Get-MyData -Name "Test"
 ### Code Organization
 
 ✅ **Do:**
+
 - One cmdlet per file
 - Group related cmdlets in the same namespace
 - Use meaningful file and class names
 - Keep cmdlets focused on a single responsibility
 
 ❌ **Don't:**
+
 - Put multiple cmdlets in one file
 - Mix business logic with cmdlet code
 - Create God classes that do everything
@@ -486,12 +492,14 @@ Get-MyData -Name "Test"
 ### Parameter Design
 
 ✅ **Do:**
+
 - Support pipeline input where appropriate
 - Use standard parameter names (`Name`, `Path`, `Filter`, etc.)
 - Add helpful parameter descriptions
 - Validate parameters appropriately
 
 ❌ **Don't:**
+
 - Require unnecessary mandatory parameters
 - Use non-standard parameter names
 - Skip validation
@@ -499,12 +507,14 @@ Get-MyData -Name "Test"
 ### Error Handling
 
 ✅ **Do:**
+
 - Use `WriteError` for non-terminating errors
 - Use `ThrowTerminatingError` for fatal errors
 - Provide meaningful error messages
 - Include error IDs for programmatic handling
 
 ❌ **Don't:**
+
 - Swallow exceptions silently
 - Use generic error messages
 - Throw raw exceptions
@@ -512,12 +522,14 @@ Get-MyData -Name "Test"
 ### Performance
 
 ✅ **Do:**
+
 - Process pipeline objects one at a time in `ProcessRecord()`
 - Initialize expensive resources in `BeginProcessing()`
 - Clean up resources in `EndProcessing()`
 - Support `StopProcessing()` for long-running operations
 
 ❌ **Don't:**
+
 - Buffer all pipeline input in memory
 - Create resources in `ProcessRecord()`
 - Leave resources uncleaned
@@ -525,12 +537,14 @@ Get-MyData -Name "Test"
 ### Documentation
 
 ✅ **Do:**
+
 - Add XML comments to all public APIs
 - Include `<example>` tags with code samples
 - Write clear parameter descriptions
 - Update help files when changing cmdlets
 
 ❌ **Don't:**
+
 - Skip documentation
 - Use vague descriptions
 - Leave outdated examples
@@ -538,12 +552,14 @@ Get-MyData -Name "Test"
 ### Version Compatibility
 
 ✅ **Do:**
+
 - Test on Windows PowerShell 5.1 and PowerShell 7+
 - Test on Windows, Linux, and macOS
 - Document minimum PowerShell version
 - Use PowerShellStandard.Library for compatibility
 
 ❌ **Don't:**
+
 - Assume PowerShell 7+ only
 - Use platform-specific APIs without checks
 - Ignore cross-platform testing
@@ -557,6 +573,7 @@ Get-MyData -Name "Test"
 5. Create a release when ready
 
 For more information, see:
+
 - [Binary vs Script Modules](./binary-vs-script-modules.md)
 - [Contributing Guide](../CONTRIBUTING.md)
 - [CI/CD Documentation](./ci-cd.md)

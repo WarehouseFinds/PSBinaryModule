@@ -18,6 +18,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 ### Development Setup
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/yourusername/PSBinaryModule.git
    cd PSBinaryModule
@@ -29,10 +30,11 @@ By participating in this project, you agree to maintain a respectful and inclusi
    - Wait for the container to build and dependencies to install
 
 3. **Or Setup Locally**
+
    ```powershell
    # Install build dependencies
    Install-PSResource -Name InvokeBuild, Pester -TrustRepository -AcceptLicense
-   
+
    # Restore .NET dependencies
    dotnet restore
    ```
@@ -123,6 +125,7 @@ Describe 'Get-Example' {
 ### Adding a New Cmdlet
 
 1. **Create the Cmdlet Class**
+
    ```csharp
    // src/Commands/YourCommand.cs
    using System.Management.Automation;
@@ -138,6 +141,7 @@ Describe 'Get-Example' {
    ```
 
 2. **Add Unit Tests**
+
    ```csharp
    // tests/PSBinaryModule.Tests/Commands/YourCommandTests.cs
    public class GetYourFeatureCommandTests
@@ -151,16 +155,17 @@ Describe 'Get-Example' {
    ```
 
 3. **Update Module Manifest**
+
    ```powershell
    # src/PSBinaryModule.psd1
    CmdletsToExport = @(
-       'Get-BinaryModuleMetadata',
-       'ConvertTo-HumanReadableSize',
+         'Get-SystemLocale',
        'Get-YourFeature'  # Add your cmdlet
    )
    ```
 
 4. **Add Integration Tests**
+
    ```powershell
    # tests/Integration/Module.Integration.Tests.ps1
    Context 'Get-YourFeature' {
@@ -183,7 +188,7 @@ Describe 'Get-Example' {
 
 Use conventional commit format:
 
-```
+```text
 type(scope): subject
 
 body
@@ -192,6 +197,7 @@ footer
 ```
 
 Types:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -201,7 +207,8 @@ Types:
 - `chore`: Maintenance tasks
 
 Example:
-```
+
+```text
 feat(cmdlets): add Get-Example cmdlet
 
 Added new cmdlet to retrieve example data with support for
@@ -213,6 +220,7 @@ Closes #123
 ### Pull Request Process
 
 1. **Create a Branch**
+
    ```bash
    git checkout -b feature/my-new-feature
    ```
@@ -223,17 +231,20 @@ Closes #123
    - Update documentation
 
 3. **Run Tests**
+
    ```powershell
    Invoke-Build -Task Test
    ```
 
 4. **Commit Changes**
+
    ```bash
    git add .
    git commit -m "feat: add new feature"
    ```
 
 5. **Push to Fork**
+
    ```bash
    git push origin feature/my-new-feature
    ```

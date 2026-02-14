@@ -38,10 +38,18 @@ EXAMPLES
 
     This command converts 1048576 bytes to "1.00 MB".
 
+    Example 4: Get normalized system locale
+    ---------------------------------------
+    Get-SystemLocale
+
+    This command returns the current system locale in normalized culture
+    name format (for example, "en-US") across Windows, Linux, and macOS.
+
 KEYWORDS
     Binary, Module, Template, CI/CD, Testing
 
 SEE ALSO
     Get-BinaryModuleMetadata
     ConvertTo-HumanReadableSize
+    Get-SystemLocale
     about_Modules
