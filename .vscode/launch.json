@@ -1,41 +1,34 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "PowerShell: Launch Current File",
-            "type": "PowerShell",
-            "request": "launch",
-            "script": "${file}",
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "name": "PowerShell: Debug Module",
-            "type": "PowerShell",
-            "request": "launch",
-            "script": "${workspaceFolder}/debug.ps1",
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "name": "PowerShell: Run Build",
-            "type": "PowerShell",
-            "request": "launch",
-            "script": "${workspaceFolder}/PSBinaryModule.build.ps1",
-            "args": ["-Task", "Build"],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "name": "PowerShell: Run Tests",
-            "type": "PowerShell",
-            "request": "launch",
-            "script": "${workspaceFolder}/PSBinaryModule.build.ps1",
-            "args": ["-Task", "Test"],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "name": ".NET: Attach to Process",
-            "type": "coreclr",
-            "request": "attach",
-            "processId": "${command:pickProcess}"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "PowerShell: Launch Current File",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${file}",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "PowerShell: Run Build",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/PSBinaryModule.build.ps1",
+      "args": [ "-Task", "Build" ],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "PowerShell: Run Tests",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/PSBinaryModule.build.ps1",
+      "args": [ "-Task", "Test" ],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": ".NET: Attach to Process",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
+    }
+  ]
 }

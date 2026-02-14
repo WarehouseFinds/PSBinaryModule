@@ -23,6 +23,7 @@ pwsh --version      # Should show 7.4.x or higher
 If you have Docker and VS Code:
 
 1. **Open in VS Code**
+
    ```bash
    code .
    ```
@@ -42,17 +43,20 @@ If you have Docker and VS Code:
 ## Option 2: Local Development
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/PSBinaryModule.git
    cd PSBinaryModule
    ```
 
 2. **Install PowerShell dependencies**
+
    ```powershell
    Install-PSResource -Name InvokeBuild, Pester -TrustRepository -AcceptLicense
    ```
 
 3. **Restore .NET dependencies**
+
    ```powershell
    dotnet restore
    ```
@@ -73,11 +77,8 @@ Invoke-Build
 Import-Module ./build/out/PSBinaryModule/PSBinaryModule.psd1
 
 # Try the cmdlets
-Get-BinaryModuleMetadata
-Get-BinaryModuleMetadata -Detailed
-
-ConvertTo-HumanReadableSize -Bytes 1048576
-1024, 2048, 3072 | ConvertTo-HumanReadableSize
+# Returns a normalized culture name (for example en-US)
+Get-SystemLocale
 
 # Remove module when done
 Remove-Module PSBinaryModule
@@ -124,8 +125,7 @@ Invoke-Pester -Path ./tests/Integration
 
    ```powershell
    CmdletsToExport = @(
-       'Get-BinaryModuleMetadata',
-       'ConvertTo-HumanReadableSize',
+         'Get-SystemLocale',
        'Get-Example'  # Add this line
    )
    ```
@@ -135,7 +135,7 @@ Invoke-Pester -Path ./tests/Integration
    ```powershell
    # Build
    Invoke-Build
-   
+
    # Import and test
    Import-Module ./build/out/PSBinaryModule/PSBinaryModule.psd1 -Force
    Get-Example -Name "World"
@@ -162,7 +162,7 @@ Get-Example -Name "Test"
 
 # Debug commands:
 # s = Step into
-# v = Step over  
+# v = Step over
 # c = Continue
 # q = Quit
 ```
@@ -170,16 +170,19 @@ Get-Example -Name "Test"
 ## Common Tasks
 
 ### Clean build artifacts
+
 ```powershell
 Invoke-Build -Task Clean
 ```
 
 ### Build with specific version
+
 ```powershell
 Invoke-Build -SemanticVersion "1.2.3"
 ```
 
 ### Run specific test
+
 ```powershell
 # C# test
 dotnet test --filter "FullyQualifiedName~GetExampleCommandTests"
@@ -189,6 +192,7 @@ Invoke-Pester -Path ./tests/Integration/Module.Integration.Tests.ps1
 ```
 
 ### View available build tasks
+
 ```powershell
 Invoke-Build ?
 ```
@@ -196,7 +200,7 @@ Invoke-Build ?
 ## VS Code Shortcuts
 
 | Shortcut | Action |
-|----------|--------|
+| ---------- | -------- |
 | `F5` | Start debugging |
 | `Ctrl+Shift+B` | Build module |
 | `Ctrl+Shift+T` | Run tests |
@@ -211,7 +215,7 @@ Invoke-Build ?
 Get-Command -Module PSBinaryModule
 
 # Get help for a cmdlet
-Get-Help Get-BinaryModuleMetadata -Full
+Get-Help Get-SystemLocale -Full
 
 # View cmdlet source (in VS Code)
 # Ctrl+Click on cmdlet name
@@ -221,7 +225,7 @@ Get-Help Get-BinaryModuleMetadata -Full
 
 # Run InvokeBuild tasks
 Invoke-Build -Task Build      # Build only
-Invoke-Build -Task Test       # Test only  
+Invoke-Build -Task Test       # Test only
 Invoke-Build -Task Clean      # Clean only
 Invoke-Build                  # Default task (Clean + Build)
 ```
@@ -238,24 +242,29 @@ Now you're ready to develop! Check out:
 ## Troubleshooting
 
 ### "Module not found" after build
+
 - Make sure build succeeded without errors
 - Check that `build/out/PSBinaryModule/PSBinaryModule.psd1` exists
 - Try running `Invoke-Build -Task Clean` then rebuild
 
 ### "dotnet: command not found"
-- Install .NET 8.0 SDK from https://dotnet.microsoft.com/download
+
+- Install .NET 8.0 SDK from <https://dotnet.microsoft.com/download>
 - Restart terminal after installation
 - Verify with `dotnet --version`
 
 ### "Invoke-Build: command not found"
+
 - Run: `Install-PSResource -Name InvokeBuild -TrustRepository`
 - Or use full path: `& (Get-PSResource InvokeBuild).InstalledLocation\Invoke-Build.ps1`
 
 ### "Cannot find type [PSCmdlet]"
+
 - You need PowerShellStandard.Library NuGet package
 - Run: `dotnet restore` in project directory
 
 ### Tests fail with "Module not loaded"
+
 - Build the module first: `Invoke-Build`
 - Make sure you're running integration tests after building
 

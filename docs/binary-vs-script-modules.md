@@ -15,22 +15,26 @@ A script module is a PowerShell module where functions are implemented directly 
 Choose binary modules when you need:
 
 ### Performance
+
 - **CPU-intensive operations**: Binary modules execute much faster than PowerShell script
 - **Large-scale data processing**: Compiled code handles large datasets more efficiently
 - **Frequent execution**: Cmdlets that run many times benefit from compilation
 
 ### Advanced .NET Features
+
 - **Low-level API access**: Direct access to Windows APIs, .NET Framework internals
 - **Complex algorithms**: Easier to implement complex data structures and algorithms in C#
 - **Third-party libraries**: Seamless integration with NuGet packages and .NET libraries
 - **Multi-threading**: Better control over parallel execution and threading
 
 ### Strong Typing and Compile-Time Checking
+
 - **Type safety**: Catch errors at compile time instead of runtime
 - **IntelliSense**: Better IDE support and autocomplete for cmdlet development
 - **Refactoring**: Safer refactoring with compiler guarantees
 
 ### Professional Distribution
+
 - **Intellectual property**: Compiled code is harder to reverse-engineer
 - **Code protection**: Hide implementation details from end users
 - **Enterprise requirements**: Some organizations prefer compiled modules
@@ -40,21 +44,25 @@ Choose binary modules when you need:
 Choose script modules when you need:
 
 ### Rapid Development
+
 - **Quick prototyping**: Faster iteration cycle without compilation
 - **Simple automation**: Straightforward tasks that don't require complex logic
 - **Frequent updates**: Easy to modify and redistribute scripts
 
 ### PowerShell-Specific Features
+
 - **Pipeline-centric**: Natural PowerShell pipeline operations
 - **Dynamic typing**: Flexibility with PowerShell's dynamic nature
 - **PowerShell idioms**: Easier to use PowerShell-specific features like splatting, automatic variables
 
 ### Accessibility
+
 - **Easy debugging**: Direct script debugging in PowerShell ISE or VS Code
 - **Transparency**: Users can view and learn from source code
 - **Community contribution**: Lower barrier for contributions
 
 ### Minimal Dependencies
+
 - **No compilation required**: Works without .NET SDK
 - **Cross-version compatibility**: Easier to support multiple PowerShell versions
 
@@ -63,7 +71,8 @@ Choose script modules when you need:
 ### Project Structure
 
 **Binary Module:**
-```
+
+```text
 PSBinaryModule/
 ├── src/
 │   ├── Commands/           # C# cmdlet classes
@@ -77,7 +86,8 @@ PSBinaryModule/
 ```
 
 **Script Module:**
-```
+
+```text
 PSScriptModule/
 ├── src/
 │   ├── Public/            # Public functions (.ps1)
@@ -92,6 +102,7 @@ PSScriptModule/
 ### Development Workflow
 
 **Binary Module:**
+
 1. Write C# code in Visual Studio/VS Code
 2. Build with `dotnet build` or `Invoke-Build`
 3. Test with xUnit (C#) and Pester (PowerShell)
@@ -99,6 +110,7 @@ PSScriptModule/
 5. Distribute compiled DLL
 
 **Script Module:**
+
 1. Write PowerShell functions in VS Code
 2. Import module or dot-source functions
 3. Test with Pester
@@ -108,6 +120,7 @@ PSScriptModule/
 ### Cmdlet Implementation
 
 **Binary Module (C#):**
+
 ```csharp
 [Cmdlet(VerbsCommon.Get, "Example")]
 [OutputType(typeof(string))]
@@ -125,6 +138,7 @@ public class GetExampleCommand : PSCmdlet
 ```
 
 **Script Module (PowerShell):**
+
 ```powershell
 function Get-Example {
     [CmdletBinding()]
@@ -144,11 +158,13 @@ function Get-Example {
 ### Testing Approach
 
 **Binary Module:**
+
 - **C# Unit Tests**: xUnit, NUnit, or MSTest for cmdlet logic
 - **PowerShell Integration Tests**: Pester for end-to-end scenarios
 - **Code Coverage**: Built-in .NET coverage tools
 
 **Script Module:**
+
 - **Pester Tests**: All tests written in PowerShell
 - **Code Coverage**: Pester's built-in coverage
 - **Mock Functions**: PowerShell's flexible mocking
@@ -156,6 +172,7 @@ function Get-Example {
 ### Build Process
 
 **Binary Module:**
+
 ```powershell
 # Requires .NET SDK
 dotnet restore
@@ -167,6 +184,7 @@ Invoke-Build -Task Build, Test
 ```
 
 **Script Module:**
+
 ```powershell
 # No compilation needed
 # Just use ModuleBuilder to combine files
@@ -176,37 +194,18 @@ Invoke-Build -Task Build, Test
 ### Debugging
 
 **Binary Module:**
+
 - Attach C# debugger to PowerShell process
 - Use Visual Studio or VS Code debugger
 - Set breakpoints in C# code
 - Also supports PowerShell debugging of usage
 
 **Script Module:**
+
 - Use PowerShell ISE or VS Code
 - Set breakpoints directly in .ps1 files
 - Use `Set-PSBreakpoint` cmdlet
 - Built-in PowerShell debugging experience
-
-### Performance Comparison
-
-**Example: Processing 100,000 items**
-
-Binary Module (C#):
-```csharp
-for (int i = 0; i < items.Count; i++)
-{
-    // Process item
-}
-// Execution time: ~50ms
-```
-
-Script Module (PowerShell):
-```powershell
-foreach ($item in $items) {
-    # Process item
-}
-# Execution time: ~500ms
-```
 
 ## Hybrid Approach
 
@@ -217,6 +216,7 @@ You can combine both approaches:
 3. **Best of both worlds**: Performance where needed, flexibility elsewhere
 
 Example:
+
 ```powershell
 # PSBinaryModule with PowerShell helpers
 # Import compiled cmdlets
@@ -226,13 +226,13 @@ Import-Module PSBinaryModule
 function Get-LargeFiles {
     [CmdletBinding()]
     param([string]$Path, [long]$MinSize = 1MB)
-    
+
     Get-ChildItem -Path $Path -Recurse -File |
         Where-Object { $_.Length -gt $MinSize } |
         ForEach-Object {
             [PSCustomObject]@{
                 Name = $_.Name
-                Size = ConvertTo-HumanReadableSize -Bytes $_.Length  # Binary cmdlet
+                Locale = Get-SystemLocale  # Binary cmdlet: normalized culture name (for example en-US)
                 Path = $_.FullName
             }
         }
@@ -259,12 +259,14 @@ function Get-LargeFiles {
 ## Recommendation
 
 **Start with a script module** if:
+
 - You're prototyping or learning
 - Performance isn't critical
 - You want maximum flexibility
 - You're building simple automation
 
 **Use a binary module** when:
+
 - Performance is critical
 - You need advanced .NET features
 - You're building professional products

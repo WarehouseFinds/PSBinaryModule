@@ -102,7 +102,7 @@
         "--configuration",
         "Debug",
         "--logger",
-        "console;verbosity=detailed"
+        "\"console;verbosity=detailed\""
       ],
       "group": "test",
       "presentation": {

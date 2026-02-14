@@ -59,17 +59,17 @@ jobs:
       - name: Build Module
         shell: pwsh
         run: |
-          Invoke-Build -Task Build, Test -SemanticVersion ${{ steps.gitversion.outputs.semVer }} -Configuration Release
+          Invoke-Build -Task Build, Test -SemanticVersion ${{ steps.gitversion.outputs.majorMinorPatch }} -Configuration Release
 
       - name: Create GitHub Release
         if: github.event_name == 'workflow_dispatch'
         uses: ncipollo/release-action@v1
         with:
-          tag: v${{ steps.gitversion.outputs.semVer }}
-          name: Release v${{ steps.gitversion.outputs.semVer }}
+          tag: v${{ steps.gitversion.outputs.majorMinorPatch }}
+          name: Release v${{ steps.gitversion.outputs.majorMinorPatch }}
           body: |
             ## Changes in this Release
-            - Version: ${{ steps.gitversion.outputs.semVer }}
+            - Version: ${{ steps.gitversion.outputs.majorMinorPatch }}
             - Commit: ${{ github.sha }}
 
             See [CHANGELOG.md](CHANGELOG.md) for detailed changes.
