@@ -17,8 +17,6 @@ on:
   pull_request:
     branches:
       - main
-      - 'release/**'
-      - 'hotfix/**'
     paths:
       - 'src/**'
       - 'tests/**'

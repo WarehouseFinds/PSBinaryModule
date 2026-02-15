@@ -1,16 +1,33 @@
 using System.Globalization;
+using PSBinaryModule;
 using System.Management.Automation;
 
 namespace PSBinaryModule.Commands
 {
     [Cmdlet(VerbsCommon.Get, "SystemLocale")]
-    [OutputType(typeof(string))]
+    [OutputType(typeof(SystemLocale))]
     public sealed class GetSystemLocaleCommand : PSCmdlet
     {
-        protected override void ProcessRecord() => WriteObject(GetNormalizedSystemLocale());
+        protected override void ProcessRecord()
+        {
+            var locale = GetNormalizedSystemLocale(out var usedFallback);
+            if (usedFallback)
+            {
+                WriteWarning("No valid system culture detected. Falling back to en-US.");
+            }
+
+            var culture = CultureInfo.GetCultureInfo(locale);
+            WriteObject(SystemLocale.FromCulture(culture));
+        }
 
         internal static string GetNormalizedSystemLocale()
         {
+            return GetNormalizedSystemLocale(out _);
+        }
+
+        internal static string GetNormalizedSystemLocale(out bool usedFallback)
+        {
+            usedFallback = false;
             var candidates = new[]
             {
                 CultureInfo.CurrentCulture.Name,
@@ -29,6 +46,7 @@ namespace PSBinaryModule.Commands
                 }
             }
 
+            usedFallback = true;
             return "en-US";
         }
 
@@ -43,7 +61,10 @@ namespace PSBinaryModule.Commands
 
             try
             {
-                return CultureInfo.GetCultureInfo(sanitized).Name;
+                var normalized = CultureInfo.GetCultureInfo(sanitized).Name;
+                var isKnown = CultureInfo.GetCultures(CultureTypes.AllCultures)
+                    .Any(culture => string.Equals(culture.Name, normalized, StringComparison.OrdinalIgnoreCase));
+                return isKnown ? normalized : null;
             }
             catch (CultureNotFoundException)
             {

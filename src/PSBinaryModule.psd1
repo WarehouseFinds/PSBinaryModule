@@ -6,7 +6,7 @@
     ModuleVersion        = '0.0.1'
 
     # Supported PSEditions
-    CompatiblePSEditions = @('Desktop', 'Core')
+    CompatiblePSEditions = @('Core')
 
     # ID used to uniquely identify this module
     GUID                 = 'd3b5f8e2-1c2a-4f5e-9f7a-123456789abc'
@@ -68,7 +68,7 @@
     )
 
     # Variables to export from this module
-    VariablesToExport    = '*'
+    VariablesToExport    = @()
 
     # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
     AliasesToExport      = @()
@@ -88,7 +88,7 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags         = @('PSEdition_Desktop', 'PSEdition_Core', 'Windows', 'Linux', 'MacOS', 'Binary', 'Template')
+            Tags         = @('PSEdition_Core', 'Windows', 'Linux', 'MacOS', 'Binary', 'Template')
 
             # A URL to the license for this module.
             LicenseUri   = 'https://github.com/yourusername/PSBinaryModule/blob/main/LICENSE'

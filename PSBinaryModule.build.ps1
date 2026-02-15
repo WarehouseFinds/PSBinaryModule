@@ -131,7 +131,7 @@ task IntegrationTests {
 task Test UnitTests
 
 # Synopsis: Build the module
-task Build Clean, Compile, {
+task Build Compile, {
     # Create output directory
     if (-not (Test-Path $outputPath)) {
         [void] (New-Item -Path $outputPath -ItemType Directory -Force)

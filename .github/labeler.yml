@@ -2,11 +2,11 @@
 
 cmdlets:
   - changed-files:
-    - any-glob-to-any-file: 'src/Commands/**'
+      - any-glob-to-any-file: 'src/Commands/**'
 
 tests:
   - changed-files:
-    - any-glob-to-any-file: 'tests/**'
+      - any-glob-to-any-file: 'tests/**'
 
 ci-cd:
   - changed-files:
@@ -33,34 +33,34 @@ devcontainer:
 
 # Branch-based labels
 breaking:
- - head-branch: ['^breaking', 'breaking', 'major']
+  - head-branch: ['^breaking', 'breaking', 'major']
 
 feature:
- - head-branch: ['^feature', 'feature', 'enhancement', 'feat', 'add', 'minor']
+  - head-branch: ['^feature', 'feature', 'enhancement', 'feat', 'add', 'minor']
 
 bugfix:
- - head-branch: ['^bugfix', 'bugfix', 'fix', 'patch', 'hotfix']
+  - head-branch: ['^bugfix', 'bugfix', 'fix', 'patch', 'hotfix']
 
- # Conventional Commit-based labels
+# Conventional Commit-based labels
 conventional-commits:
-- type: 'bugfix'
-  nouns: ['bugfix', 'fix', 'patch', 'hotfix']
-  labels: ['bugfix']
-- type: 'feature'
-  nouns: ['feature', 'enhancement', 'feat', 'add', 'minor']
-  labels: ['feature']
-- type: 'breaking'
-  nouns: ['breaking', 'major']
-  labels: ['breaking']
-- type: 'docs'
-  nouns: ['document','documentation']
-  labels: ['docs']
-- type: 'build'
-  nouns: ['build','rebuild']
-  labels: ['build']
-- type: 'performance'
-  nouns: ['performance', 'optimize', 'optimization']
-  labels: ['performance']
-- type: 'config'
-  nouns: ['config', 'conf', 'cofiguration', 'configure']
-  labels: ['config']
+  - type: 'bugfix'
+    nouns: ['bugfix', 'fix', 'patch', 'hotfix']
+    labels: ['bugfix']
+  - type: 'feature'
+    nouns: ['feature', 'enhancement', 'feat', 'add', 'minor']
+    labels: ['feature']
+  - type: 'breaking'
+    nouns: ['breaking', 'major']
+    labels: ['breaking']
+  - type: 'docs'
+    nouns: ['document', 'documentation']
+    labels: ['docs']
+  - type: 'build'
+    nouns: ['build', 'rebuild']
+    labels: ['build']
+  - type: 'performance'
+    nouns: ['performance', 'optimize', 'optimization']
+    labels: ['performance']
+  - type: 'config'
+    nouns: ['config', 'conf', 'cofiguration', 'configure']
+    labels: ['config']

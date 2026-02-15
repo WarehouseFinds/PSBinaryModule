@@ -55,11 +55,22 @@
     {
       "label": "Run Tests",
       "type": "shell",
-      "command": "Invoke-Build -Task Test",
+      "command": "Invoke-Build -Task UnitTests",
       "group": {
         "kind": "test",
         "isDefault": true
       },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": [ ]
+    },
+    {
+      "label": "Run Integration Tests",
+      "type": "shell",
+      "command": "Invoke-Build -Task IntegrationTests",
+      "group": "test",
       "presentation": {
         "reveal": "always",
         "panel": "new"
