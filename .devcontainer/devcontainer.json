@@ -51,8 +51,6 @@
       "extensions": [
         "ms-vscode.powershell",
         "ms-dotnettools.csdevkit",
-        "ms-dotnettools.csharp",
-        "ms-dotnettools.vscode-dotnet-runtime",
         "pspester.pester-test",
         "editorconfig.editorconfig",
         "DavidAnson.vscode-markdownlint"

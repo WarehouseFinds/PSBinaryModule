@@ -33,17 +33,18 @@ Describe 'PSBinaryModule Integration Tests' -Tag 'Integration' {
         It 'Should return a locale string' {
             $result = Get-SystemLocale
             $result | Should -Not -BeNullOrEmpty
-            $result | Should -BeOfType ([string])
+            $result | Should -BeOfType ([PSBinaryModule.SystemLocale])
+            $result.Name | Should -Not -BeNullOrEmpty
         }
 
         It 'Should return locale in normalized format' {
             $result = Get-SystemLocale
 
-            $result | Should -Not -Match '_'
-            { [System.Globalization.CultureInfo]::GetCultureInfo($result) } | Should -Not -Throw
+            $result.Name | Should -Not -Match '_'
+            { [System.Globalization.CultureInfo]::GetCultureInfo($result.Name) } | Should -Not -Throw
 
-            $normalized = [System.Globalization.CultureInfo]::GetCultureInfo($result).Name
-            $result | Should -Be $normalized
+            $normalized = [System.Globalization.CultureInfo]::GetCultureInfo($result.Name).Name
+            $result.Name | Should -Be $normalized
         }
     }
 }

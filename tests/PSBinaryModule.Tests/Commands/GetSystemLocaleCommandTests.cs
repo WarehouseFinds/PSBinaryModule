@@ -22,6 +22,38 @@ namespace PSBinaryModule.Tests.Commands
         }
 
         [Fact]
+        public void NormalizeLocaleReturnsNullForNullInput()
+        {
+            var result = GetSystemLocaleCommand.NormalizeLocale(null);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void NormalizeLocaleReturnsNullForInvalidCulture()
+        {
+            var result = GetSystemLocaleCommand.NormalizeLocale("xx-ZZ");
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void NormalizeLocaleKeepsAlreadyNormalizedInput()
+        {
+            var result = GetSystemLocaleCommand.NormalizeLocale("en-US");
+
+            Assert.Equal("en-US", result);
+        }
+
+        [Fact]
+        public void NormalizeLocaleTrimsAndNormalizesValidInput()
+        {
+            var result = GetSystemLocaleCommand.NormalizeLocale("  en_us  ");
+
+            Assert.Equal("en-US", result);
+        }
+
+        [Fact]
         public void GetNormalizedSystemLocaleReturnsValidCultureName()
         {
             var locale = GetSystemLocaleCommand.GetNormalizedSystemLocale();
