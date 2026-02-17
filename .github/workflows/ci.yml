@@ -157,7 +157,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: PSBinaryModule
           path: build/out/PSBinaryModule
