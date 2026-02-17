@@ -29,24 +29,24 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Install GitVersion tool
-        uses: gittools/actions/gitversion/setup@d0139503a9321f76b4a417dfdc8aebcec24decdd
+        uses: gittools/actions/gitversion/setup@2685caa112fc953a61603836655d04cbc57bc2aa
         with:
           versionSpec: '6.5.1'
 
       - name: Get semantic build version
         id: gitversion
-        uses: gittools/actions/gitversion/execute@d0139503a9321f76b4a417dfdc8aebcec24decdd
+        uses: gittools/actions/gitversion/execute@2685caa112fc953a61603836655d04cbc57bc2aa
         with:
           configFilePath: GitVersion.yml
           disableShallowCloneCheck: true
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '9.0.x'
 
