@@ -45,7 +45,7 @@ runs:
                 $buildVersion = '${{ steps.gitversion.outputs.semVer }}'.Split('-', 2)[0] + '-Prerelease'
             }
             'Debug' {
-                $buildVersion = '${{ steps.gitversion.outputs.semVer }}'
+                $buildVersion = '${{ steps.gitversion.outputs.semVer }}'.Split('-', 2)[0] + '-Debug'
             }
         }
         echo "build-version=$buildVersion" >> $env:GITHUB_OUTPUT
