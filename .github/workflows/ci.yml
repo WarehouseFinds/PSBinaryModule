@@ -128,6 +128,9 @@ jobs:
 
       - name: Download all build artifacts
         uses: actions/download-artifact@v5
+        with:
+          name: PSBinaryModule
+          path: build/out/PSBinaryModule
 
       - name: Setup PowerShell
         shell: pwsh
