@@ -33,23 +33,6 @@ runs:
         configFilePath: GitVersion.yml
         disableShallowCloneCheck: true
 
-    - name: Determine build version
-      id: compute
-      shell: pwsh
-      run: |
-        switch ('${{ inputs.release-type }}') {
-            'Release' {
-                $buildVersion = '${{ steps.gitversion.outputs.semVer }}'.Split('-', 2)[0]
-            }
-            'Prerelease' {
-                $buildVersion = '${{ steps.gitversion.outputs.semVer }}'.Split('-', 2)[0] + '-Prerelease'
-            }
-            'Debug' {
-                $buildVersion = '${{ steps.gitversion.outputs.semVer }}'.Split('-', 2)[0] + '-Debug'
-            }
-        }
-        echo "build-version=$buildVersion" >> $env:GITHUB_OUTPUT
-
     - name: Setup PowerShell
       shell: pwsh
       run: |
@@ -58,7 +41,7 @@ runs:
     - name: Build Module
       shell: pwsh
       run: |
-        Invoke-Build -Task Build -SemanticVersion ${{ steps.compute.outputs.build-version }} -Configuration ${{ inputs.release-type }}
+        Invoke-Build -Task Build -SemanticVersion ${{ steps.gitversion.outputs.MajorMinorPatch }} -Configuration ${{ inputs.release-type }}
 
     - name: Create NuGet package from build artifacts
       shell: pwsh
@@ -71,8 +54,8 @@ runs:
       id: upload_nuget
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ github.event.repository.name }}.${{ steps.compute.outputs.build-version }}.nupkg
-        path: /build/package/${{ github.event.repository.name }}.${{ steps.compute.outputs.build-version }}.nupkg
+        name: ${{ github.event.repository.name }}.${{ steps.gitversion.outputs.MajorMinorPatch }}.nupkg
+        path: /build/package/${{ github.event.repository.name }}.${{ steps.gitversion.outputs.MajorMinorPatch }}.nupkg
 
     - name: Upload module bin artifacts
       id: upload_bin
