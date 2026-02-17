@@ -31,6 +31,11 @@ devcontainer:
   - changed-files:
     - any-glob-to-any-file: '.devcontainer/**/*'
 
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file: 'packages.config'
+    - any-glob-to-any-file: '*.csproj'
+
 # Branch-based labels
 breaking:
   - head-branch: ['^breaking', 'breaking', 'major']
