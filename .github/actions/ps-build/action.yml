@@ -1,9 +1,6 @@
 name: Build PowerShell Module
 description: Build module, generate help, and upload artifacts
 inputs:
-  module-list:
-    description: Comma-separated list of PowerShell modules to cache
-    required: true
   release-type:
     description: Type of release (Release, Prerelease, Debug)
     default: Debug
@@ -18,6 +15,12 @@ outputs:
 runs:
   using: composite
   steps:
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
     - name: Install GitVersion tool
       uses: gittools/actions/gitversion/setup@d0139503a9321f76b4a417dfdc8aebcec24decdd #v4.2.0
       with:
@@ -30,23 +33,6 @@ runs:
         configFilePath: GitVersion.yml
         disableShallowCloneCheck: true
 
-    - name: Determine build version
-      id: compute
-      shell: pwsh
-      run: |
-        switch ('${{ inputs.release-type }}') {
-            'Release' {
-                $buildVersion = '${{ steps.gitversion.outputs.semVer }}'.Split('-', 2)[0]
-            }
-            'Prerelease' {
-                $buildVersion = '${{ steps.gitversion.outputs.semVer }}'.Split('-', 2)[0] + '-Prerelease'
-            }
-            'Debug' {
-                $buildVersion = '${{ steps.gitversion.outputs.semVer }}'
-            }
-        }
-        echo "build-version=$buildVersion" >> $env:GITHUB_OUTPUT
-
     - name: Setup PowerShell
       shell: pwsh
       run: |
@@ -55,5 +41,25 @@ runs:
     - name: Build Module
       shell: pwsh
       run: |
-        Invoke-Build -Task Build -SemanticVersion ${{ steps.gitversion.outputs.majorMinorPatch }} -Configuration Release
+        Invoke-Build -Task Build -SemanticVersion ${{ steps.gitversion.outputs.MajorMinorPatch }} -Configuration ${{ inputs.release-type }}
 
+    - name: Create NuGet package from build artifacts
+      shell: pwsh
+      run: |
+        Set-StrictMode -Version Latest
+        [void] (Import-Module InvokeBuild)
+        Invoke-Build -Task Package
+
+    - name: Upload NuGet package
+      id: upload_nuget
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.event.repository.name }}.${{ steps.gitversion.outputs.MajorMinorPatch }}.nupkg
+        path: /build/package/${{ github.event.repository.name }}.${{ steps.gitversion.outputs.MajorMinorPatch }}.nupkg
+
+    - name: Upload module bin artifacts
+      id: upload_bin
+      uses: actions/upload-artifact@v4
+      with:
+        name: PSBinaryModule
+        path: build/out/PSBinaryModule
