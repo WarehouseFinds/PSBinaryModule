@@ -68,7 +68,7 @@ runs:
         Invoke-Build -Task Package
 
     - name: Upload NuGet package
-      id: upload_nupkg
+      id: upload_nuget
       uses: actions/upload-artifact@v4
       with:
         name: ${{ github.event.repository.name }}.${{ steps.compute.outputs.build-version }}.nupkg
