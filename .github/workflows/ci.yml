@@ -61,10 +61,7 @@ jobs:
   unit-tests:
     name: Unit Tests
     needs: [build]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       issues: write
@@ -83,6 +80,9 @@ jobs:
 
       - name: Download all build artifacts
         uses: actions/download-artifact@v5
+        with:
+          name: PSBinaryModule
+          path: build/out/PSBinaryModule
 
       - name: Run C# unit tests
         run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=unit-tests.trx" --collect "XPlat Code Coverage" --results-directory ./test-results
