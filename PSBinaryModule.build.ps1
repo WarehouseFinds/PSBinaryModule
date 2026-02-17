@@ -183,6 +183,34 @@ task Build Compile, {
     Write-Build Green "Module built successfully at: $outputPath"
 }
 
+# Synopsis: Create a NuGet package for the module
+task Package {
+    $packageOutputPath = Join-Path -Path $buildPath -ChildPath 'package'
+    if (!(Test-Path $packageOutputPath)) {
+        [void] (New-Item -Path $packageOutputPath -ItemType Directory -Force)
+    }
+
+    $requestParam = @{
+        Name               = "$($moduleName)_local_feed"
+        SourceLocation     = $packageOutputPath
+        PublishLocation    = $packageOutputPath
+        InstallationPolicy = 'Trusted'
+        ErrorAction        = 'Stop'
+    }
+    [void] (Register-PSRepository @requestParam)
+
+    $requestParam = @{
+        Path        = (Join-Path -Path $buildPath -ChildPath "out/$moduleName")
+        Repository  = "$($moduleName)_local_feed"
+        NuGetApiKey = 'ABC123'
+        ErrorAction = 'Stop'
+    }
+    [void] (Publish-Module @requestParam)
+
+    [void] (Unregister-PSRepository -Name "$($moduleName)_local_feed")
+
+}
+
 # Synopsis: Publish the module to PSGallery
 task Publish -If ($NugetApiKey) {
     $requestParam = @{
