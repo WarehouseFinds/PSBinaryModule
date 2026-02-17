@@ -70,7 +70,7 @@ jobs:
         run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=unit-tests.trx" --collect "XPlat Code Coverage" --results-directory ./test-results
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: test-results-${{ matrix.os }}
@@ -130,7 +130,7 @@ jobs:
           Invoke-Build -Task Build -SemanticVersion ${{ steps.gitversion.outputs.majorMinorPatch }}
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: PSBinaryModule
           path: build/out/PSBinaryModule/
@@ -190,7 +190,7 @@ jobs:
           Invoke-Pester -Configuration $config
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: integration-test-results-${{ matrix.os }}
