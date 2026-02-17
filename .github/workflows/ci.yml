@@ -56,7 +56,7 @@ jobs:
         id: build
         uses: ./.github/actions/ps-build
         with:
-          release-type: ${{ inputs['release-type'] }}
+          release-type: Debug
 
   unit-tests:
     name: Unit Tests
