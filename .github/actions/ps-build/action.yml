@@ -68,14 +68,14 @@ runs:
         Invoke-Build -Task Package
 
     - name: Upload NuGet package
-      id: upload
+      id: upload_nupkg
       uses: actions/upload-artifact@v4
       with:
         name: ${{ github.event.repository.name }}.${{ steps.compute.outputs.build-version }}.nupkg
         path: /build/package/${{ github.event.repository.name }}.${{ steps.compute.outputs.build-version }}.nupkg
 
     - name: Upload module bin artifacts
-      id: upload
+      id: upload_bin
       uses: actions/upload-artifact@v4
       with:
         name: PSBinaryModule
