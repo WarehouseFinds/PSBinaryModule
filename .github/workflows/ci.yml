@@ -94,7 +94,7 @@ jobs:
     permissions:
       contents: write
     outputs:
-      release-version: ${{ steps.gitversion.outputs.semVer }}
+      release-version: ${{ steps.gitversion.outputs.majorMinorPatch }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

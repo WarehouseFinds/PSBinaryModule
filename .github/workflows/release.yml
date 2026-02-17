@@ -3,22 +3,21 @@ run-name: "${{ github.event.repository.name }} | Release | ${{ github.run_id }}"
 permissions: read-all
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - '*.sln'
-      - '*.csproj'
-
   workflow_dispatch:
     inputs:
-      force-publish:
-        description: 'Publish to PSGallery'
+      release-type:
+        description: 'Release type'
+        required: true
+        default: 'Release'
+        type: choice
+        options:
+          - Release
+          - Prerelease
+      publish-psgallery:
+        description: 'Publish release to PSGallery'
         required: false
-        default: false
         type: boolean
+        default: true
 
 jobs:
   release:
@@ -61,30 +60,16 @@ jobs:
         run: |
           Invoke-Build -Task Build, Test -SemanticVersion ${{ steps.gitversion.outputs.majorMinorPatch }} -Configuration Release
 
-      - name: Create GitHub Release
-        if: github.event_name == 'workflow_dispatch'
-        uses: ncipollo/release-action@v1
+      - name: Build Module
+        id: build
+        uses: ./.github/actions/ps-build
         with:
-          tag: v${{ steps.gitversion.outputs.majorMinorPatch }}
-          name: Release v${{ steps.gitversion.outputs.majorMinorPatch }}
-          body: |
-            ## Changes in this Release
-            - Version: ${{ steps.gitversion.outputs.majorMinorPatch }}
-            - Commit: ${{ github.sha }}
+          release-type: ${{ inputs['release-type'] }}
 
-            See [CHANGELOG.md](CHANGELOG.md) for detailed changes.
-          artifacts: "build/out/PSBinaryModule/**/*"
-          draft: false
-          prerelease: ${{ steps.gitversion.outputs.preReleaseLabel != '' }}
-
-      - name: Publish to PowerShell Gallery
-        if: (github.event_name == 'workflow_dispatch' || github.event.inputs.publish-psgallery == 'true')
-        shell: pwsh
+      - name: Release Module
+        uses: ./.github/actions/ps-release
         env:
-          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
-        run: |
-          if ([string]::IsNullOrEmpty($env:PSGALLERY_API_KEY)) {
-            Write-Warning "PSGallery API key not found. Skipping publish."
-            exit 0
-          }
-          Invoke-Build -Task Publish -NugetApiKey $env:PSGALLERY_API_KEY
+          PSGALLERY_API_KEY: ${{ secrets.NUGETAPIKEY_PSGALLERY }}
+        with:
+          release-version: ${{ steps.build.outputs.release-version }}
+          publish-psgallery: ${{ inputs.publish-psgallery }}

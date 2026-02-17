@@ -1,0 +1,59 @@
+name: Build PowerShell Module
+description: Build module, generate help, and upload artifacts
+inputs:
+  module-list:
+    description: Comma-separated list of PowerShell modules to cache
+    required: true
+  release-type:
+    description: Type of release (Release, Prerelease, Debug)
+    default: Debug
+    required: false
+outputs:
+  build-version:
+    description: Semantic build version
+    value: ${{ steps.compute.outputs.build-version }}
+  release-version:
+    description: Release version from GitVersion
+    value: ${{ steps.gitversion.outputs.majorMinorPatch }}
+runs:
+  using: composite
+  steps:
+    - name: Install GitVersion tool
+      uses: gittools/actions/gitversion/setup@d0139503a9321f76b4a417dfdc8aebcec24decdd #v4.2.0
+      with:
+        versionSpec: '6.5.1'
+
+    - name: Get semantic build version
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@d0139503a9321f76b4a417dfdc8aebcec24decdd #v4.2.0
+      with:
+        configFilePath: GitVersion.yml
+        disableShallowCloneCheck: true
+
+    - name: Determine build version
+      id: compute
+      shell: pwsh
+      run: |
+        switch ('${{ inputs.release-type }}') {
+            'Release' {
+                $buildVersion = '${{ steps.gitversion.outputs.semVer }}'.Split('-', 2)[0]
+            }
+            'Prerelease' {
+                $buildVersion = '${{ steps.gitversion.outputs.semVer }}'.Split('-', 2)[0] + '-Prerelease'
+            }
+            'Debug' {
+                $buildVersion = '${{ steps.gitversion.outputs.semVer }}'
+            }
+        }
+        echo "build-version=$buildVersion" >> $env:GITHUB_OUTPUT
+
+    - name: Setup PowerShell
+      shell: pwsh
+      run: |
+        Install-PSResource -Name InvokeBuild -TrustRepository -AcceptLicense
+
+    - name: Build Module
+      shell: pwsh
+      run: |
+        Invoke-Build -Task Build -SemanticVersion ${{ steps.gitversion.outputs.majorMinorPatch }} -Configuration Release
+
