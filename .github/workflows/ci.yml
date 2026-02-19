@@ -208,7 +208,7 @@ jobs:
           Write-Host ""
           Write-Host "Checking bin directory for dependencies..."
           $binDir = './src/bin/Release'
-          Write-Host "Contents of $binDir:"
+          Write-Host "Contents of ${binDir}:"
           Get-ChildItem -Path $binDir -Filter '*.dll' | Sort-Object Name | ForEach-Object {
             Write-Host "  - $($_.Name)"
           }
