@@ -177,7 +177,7 @@ jobs:
         run: |
           # Install latest Pester compatible with PowerShell 7.5.4 and .NET 10
           Write-Host "Installing Pester..."
-          Install-PSResource -Name Pester -MinimumVersion 5.9.0 -TrustRepository -AcceptLicense -Force
+          Install-PSResource -Name Pester -TrustRepository -AcceptLicense -Force
 
           # Verify installation
           $pesterModule = Get-Module Pester -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
