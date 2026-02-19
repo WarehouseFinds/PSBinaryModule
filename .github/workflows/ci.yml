@@ -126,6 +126,15 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Set DOTNET_ROOT for PowerShell
+        run: |
+          $dotnetPath = Get-Command dotnet | Select-Object -ExpandProperty Source
+          $dotnetRoot = Split-Path -Parent $dotnetPath
+          echo "DOTNET_ROOT=$dotnetRoot" >> $GITHUB_ENV
+          Write-Host "Found dotnet at: $dotnetPath"
+          Write-Host "DOTNET_ROOT set to: $dotnetRoot"
+        shell: pwsh
+
       - name: Download all build artifacts
         uses: actions/download-artifact@v5
         with:
@@ -133,6 +142,19 @@ jobs:
           path: build/out/PSBinaryModule
 
       - name: Setup PowerShell
+        shell: bash
+        run: |
+          echo "=== .NET Info ==="
+          dotnet --info
+          echo ""
+          echo "=== Runtime Location ==="
+          ls -la $DOTNET_ROOT/shared/Microsoft.NETCore.App/ 2>/dev/null || echo "No runtimes found"
+          echo ""
+          echo "=== PowerShell .NET Check ==="
+          pwsh -c '$PSVersionTable | Select-Object PSVersion, OS'
+          pwsh -c '[System.Runtime.InteropServices.RuntimeInformation]::OSDescription'
+
+      - name: Install Pester
         shell: pwsh
         run: |
           Install-PSResource -Name Pester -TrustRepository -AcceptLicense
