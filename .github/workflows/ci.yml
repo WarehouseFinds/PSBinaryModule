@@ -148,18 +148,23 @@ jobs:
             Invoke-Build -Task Build
           }
 
-          # Verify the build output exists
+          # Verify the build output exists and show contents
           $modulePath = './build/out/PSBinaryModule/PSBinaryModule.psd1'
           if (Test-Path $modulePath) {
             Write-Host "Module manifest found at: $modulePath"
+            Write-Host ""
+            Write-Host "Module output directory contents:"
+            Get-ChildItem -Path './build/out/PSBinaryModule/' | ForEach-Object {
+              Write-Host "  - $($_.Name)"
+            }
+
             $dllPath = './build/out/PSBinaryModule/PSBinaryModule.dll'
             if (Test-Path $dllPath) {
-              Write-Host "Module DLL found at: $dllPath"
-              Write-Host "Checking assembly metadata..."
+              Write-Host ""
+              Write-Host "Module DLL found: $dllPath"
+              Write-Host "Checking assembly name..."
               [Reflection.AssemblyName]::GetAssemblyName($dllPath) | ForEach-Object {
-                Write-Host "  Name: $($_.Name)"
-                Write-Host "  Version: $($_.Version)"
-                Write-Host "  FrameworkVersion: $($_.FrameworkVersion)"
+                Write-Host "  Name: $($_.Name), Version: $($_.Version)"
               }
             }
           } else {
@@ -168,19 +173,7 @@ jobs:
             Get-ChildItem -Path './build/out/' -Recurse | Format-Table FullName
             throw "Build failed or module not created"
           }
-          Write-Host "Module build complete"
-
-      - name: Setup PowerShell
-        shell: bash
-        run: |
-          echo "=== .NET Info ==="
-          dotnet --info
-          echo ""
-          echo "=== Runtime Location ==="
-          ls -la $DOTNET_ROOT/shared/Microsoft.NETCore.App/ 2>/dev/null || echo "No runtimes found"
-          echo ""
-          echo "=== PowerShell .NET Check ==="
-          pwsh -c '$PSVersionTable | Select-Object PSVersion, OS'
+          Write-Host ""
           pwsh -c '[System.Runtime.InteropServices.RuntimeInformation]::OSDescription'
 
       - name: Install PowerShell 7.5.4

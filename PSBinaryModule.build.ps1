@@ -169,12 +169,10 @@ task Build Compile, {
         Copy-Item -Path "$helpPath/*" -Destination $outputHelpPath -Recurse -Force
     }
 
-    # Copy dependencies (if any)
+    # Copy dependencies (including System.* and Microsoft.* for .NET 10 compatibility)
     $binPath = Join-Path -Path $srcPath -ChildPath "bin/$Configuration"
     Get-ChildItem -Path $binPath -Filter '*.dll' | Where-Object {
         $_.Name -ne "$moduleName.dll" -and
-        $_.Name -notmatch '^System\.' -and
-        $_.Name -notmatch '^Microsoft\.' -and
         $_.Name -ne 'PowerShellStandard.Library.dll'
     } | ForEach-Object {
         Copy-Item -Path $_.FullName -Destination $outputPath -Force
