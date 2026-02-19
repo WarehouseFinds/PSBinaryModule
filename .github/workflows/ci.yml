@@ -147,6 +147,27 @@ jobs:
             Install-Module InvokeBuild -Force -SkipPublisherCheck
             Invoke-Build -Task Build
           }
+
+          # Verify the build output exists
+          $modulePath = './build/out/PSBinaryModule/PSBinaryModule.psd1'
+          if (Test-Path $modulePath) {
+            Write-Host "Module manifest found at: $modulePath"
+            $dllPath = './build/out/PSBinaryModule/PSBinaryModule.dll'
+            if (Test-Path $dllPath) {
+              Write-Host "Module DLL found at: $dllPath"
+              Write-Host "Checking assembly metadata..."
+              [Reflection.AssemblyName]::GetAssemblyName($dllPath) | ForEach-Object {
+                Write-Host "  Name: $($_.Name)"
+                Write-Host "  Version: $($_.Version)"
+                Write-Host "  FrameworkVersion: $($_.FrameworkVersion)"
+              }
+            }
+          } else {
+            Write-Host "ERROR: Module not found at expected path: $modulePath"
+            Write-Host "Build output contents:"
+            Get-ChildItem -Path './build/out/' -Recurse | Format-Table FullName
+            throw "Build failed or module not created"
+          }
           Write-Host "Module build complete"
 
       - name: Setup PowerShell
@@ -183,38 +204,75 @@ jobs:
       - name: Install Pester
         shell: pwsh
         run: |
-          # Install latest Pester compatible with PowerShell 7.5.4 and .NET 10
-          Write-Host "Installing Pester..."
+          Write-Host "Setting up Pester..."
+
+          # Remove any existing Pester versions
+          Remove-Module Pester -Force -ErrorAction SilentlyContinue
+          Get-Module Pester -ListAvailable | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+
+          Write-Host "Installing latest Pester..."
           Install-PSResource -Name Pester -TrustRepository -AcceptLicense
 
-          # Verify installation
+          # Verify and load new version
           $pesterModule = Get-Module Pester -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
-          Write-Host "Pester version installed: $($pesterModule.Version)"
+          Write-Host "Pester version available: $($pesterModule.Version)"
+          Import-Module Pester -Force -PassThru | Select-Object Name, Version
+
+      - name: Diagnose Module Load
+        shell: pwsh
+        run: |
+          Write-Host "=== Pre-Import Diagnostics ==="
+          Write-Host "PowerShell: $($PSVersionTable.PSVersion)"
+          Write-Host "OS: $($PSVersionTable.OS)"
+          Write-Host "DOTNET_ROOT: $env:DOTNET_ROOT"
+
+          # Check if the module DLL exists and is valid
+          $modulePath = './build/out/PSBinaryModule/PSBinaryModule.psd1'
+          $dllPath = './build/out/PSBinaryModule/PSBinaryModule.dll'
+
+          Write-Host ""
+          Write-Host "Checking module files:"
+          Write-Host "  PSD1 exists: $(Test-Path $modulePath)"
+          Write-Host "  DLL exists: $(Test-Path $dllPath)"
+
+          if (Test-Path $dllPath) {
+            try {
+              $asm = [Reflection.Assembly]::LoadFrom((Resolve-Path $dllPath))
+              Write-Host "  DLL loaded successfully"
+              Write-Host "  DLL FullName: $($asm.FullName)"
+              Write-Host "  DLL TargetFramework: $(($asm.GetCustomAttributes([System.Runtime.Versioning.TargetFrameworkAttribute]) | Select-Object -First 1).FrameworkName)"
+            } catch {
+              Write-Host "  ERROR loading DLL: $($_.Exception.Message)"
+              Write-Host "  Full error: $($_ | Out-String)"
+            }
+          }
+
+          Write-Host ""
+          Write-Host "Attempting to import module..."
+          try {
+            Import-Module $modulePath -Force -ErrorAction Stop
+            Write-Host "  SUCCESS: Module imported"
+          } catch {
+            Write-Host "  ERROR: $($_.Exception.GetType().FullName)"
+            Write-Host "  Message: $($_.Exception.Message)"
+            Write-Host "  InnerException: $($_.Exception.InnerException.Message)"
+            Write-Host "  Full exception: $($_ | Out-String)"
+          }
 
       - name: Run Integration Tests
         shell: pwsh
         env:
           DOTNET_ROOT: ${{ env.DOTNET_ROOT }}
         run: |
-          # Ensure assembly resolution can find .NET 10 runtime
+          Write-Host "=== Running Integration Tests ==="
           Write-Host "DOTNET_ROOT: $env:DOTNET_ROOT"
           Write-Host "PowerShell Version: $($PSVersionTable.PSVersion)"
 
-          # Pre-load .NET runtime information for assembly resolution
-          if ($env:DOTNET_ROOT) {
-            $netRuntimePath = Join-Path $env:DOTNET_ROOT 'shared/Microsoft.NETCore.App'
-            if (Test-Path $netRuntimePath) {
-              Write-Host ".NET runtime found at: $netRuntimePath"
-              # List available versions
-              Get-ChildItem $netRuntimePath | ForEach-Object { Write-Host "  - $_" }
+          # Import Pester
+          Import-Module Pester
+          Write-Host "Pester loaded: $(Get-Module Pester | Select-Object -ExpandProperty Version)"
 
-              # Ensure DOTNET_ROOT is available in the environment for child processes
-              $env:DOTNET_ROOT = $env:DOTNET_ROOT
-            } else {
-              Write-Host "Warning: .NET runtime path not found: $netRuntimePath"
-            }
-          }
-
+          # Run the tests
           $config = New-PesterConfiguration @{
               Run        = @{
                   Path     = './tests/Integration'
@@ -233,9 +291,7 @@ jobs:
               }
           }
 
-          Write-Host "Running Pester with DOTNET_ROOT=$env:DOTNET_ROOT"
           Invoke-Pester -Configuration $config
-
       - name: Upload test results
         uses: actions/upload-artifact@v6
         if: always()
