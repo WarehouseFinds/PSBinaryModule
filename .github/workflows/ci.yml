@@ -248,59 +248,22 @@ jobs:
           Write-Host "Pester version available: $($pesterModule.Version)"
           Import-Module Pester -Force -PassThru | Select-Object Name, Version
 
-      - name: Diagnose Module Load
-        shell: pwsh
-        run: |
-          Write-Host "=== Pre-Import Diagnostics ==="
-          Write-Host "PowerShell: $($PSVersionTable.PSVersion)"
-          Write-Host "OS: $($PSVersionTable.OS)"
-          Write-Host "DOTNET_ROOT: $env:DOTNET_ROOT"
-
-          # Check if the module DLL exists and is valid
-          $modulePath = './build/out/PSBinaryModule/PSBinaryModule.psd1'
-          $dllPath = './build/out/PSBinaryModule/PSBinaryModule.dll'
-
-          Write-Host ""
-          Write-Host "Checking module files:"
-          Write-Host "  PSD1 exists: $(Test-Path $modulePath)"
-          Write-Host "  DLL exists: $(Test-Path $dllPath)"
-
-          if (Test-Path $dllPath) {
-            try {
-              $asm = [Reflection.Assembly]::LoadFrom((Resolve-Path $dllPath))
-              Write-Host "  DLL loaded successfully"
-              Write-Host "  DLL FullName: $($asm.FullName)"
-              Write-Host "  DLL TargetFramework: $(($asm.GetCustomAttributes([System.Runtime.Versioning.TargetFrameworkAttribute]) | Select-Object -First 1).FrameworkName)"
-            } catch {
-              Write-Host "  ERROR loading DLL: $($_.Exception.Message)"
-              Write-Host "  Full error: $($_ | Out-String)"
-            }
-          }
-
-          Write-Host ""
-          Write-Host "Attempting to import module..."
-          try {
-            Import-Module $modulePath -Force -ErrorAction Stop
-            Write-Host "  SUCCESS: Module imported"
-          } catch {
-            Write-Host "  ERROR: $($_.Exception.GetType().FullName)"
-            Write-Host "  Message: $($_.Exception.Message)"
-            Write-Host "  InnerException: $($_.Exception.InnerException.Message)"
-            Write-Host "  Full exception: $($_ | Out-String)"
-          }
-
       - name: Run Integration Tests
         shell: pwsh
         env:
           DOTNET_ROOT: ${{ env.DOTNET_ROOT }}
+          DOTNET_ROOT_ARM64: ${{ env.DOTNET_ROOT }}
         run: |
           Write-Host "=== Running Integration Tests ==="
+          Write-Host "PowerShell: $($PSVersionTable.PSVersion)"
+          Write-Host "OS: $($PSVersionTable.OS)"
           Write-Host "DOTNET_ROOT: $env:DOTNET_ROOT"
-          Write-Host "PowerShell Version: $($PSVersionTable.PSVersion)"
+          Write-Host "DOTNET_ROOT_ARM64: $env:DOTNET_ROOT_ARM64"
 
           # Import Pester
           Import-Module Pester
-          Write-Host "Pester loaded: $(Get-Module Pester | Select-Object -ExpandProperty Version)"
+          Write-Host "Pester version: $(Get-Module Pester | Select-Object -ExpandProperty Version)"
+          Write-Host ""
 
           # Run the tests
           $config = New-PesterConfiguration @{
