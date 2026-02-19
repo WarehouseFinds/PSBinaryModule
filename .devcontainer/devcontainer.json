@@ -1,13 +1,16 @@
 {
   "name": "PowerShell-PSBinaryModule",
-  "image": "mcr.microsoft.com/devcontainers/dotnet:1-9.0",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:10.0",
 
   "features": {
     "ghcr.io/devcontainers/features/powershell:1": {
-      "version": "latest"
+      "version": "stable"
     },
     "ghcr.io/devcontainers/features/github-cli:1": {
       "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
     }
   },
 
@@ -32,14 +35,21 @@
         // GitHub Copilot
         "github.copilot.chat.enableTerminalIntegration": true,
 
+        // MCPP server for GitHub Codespaces
+        "chat.mcp.servers": {
+          "github": {
+            "command": "server-github"
+          }
+        },
+
         // PowerShell extension
         "powershell.integratedConsole.showOnStartup": false,
         "powershell.startAsLoginShell.linux": false,
 
         // C# extension
         "dotnet.defaultSolution": "PSBinaryModule.sln",
-        "omnisharp.enableEditorConfigSupport": true,
-        "omnisharp.enableRoslynAnalyzers": true,
+        "dotnet.server.useGlobalDotnet": true,
+        "dotnet.automaticallyUseSDKsFromPath": true,
 
         // Test Explorer
         "dotnet-test-explorer.testProjectPath": "**/*.Tests.csproj",
@@ -67,10 +77,13 @@
   // Install PowerShell modules on container creation
   "onCreateCommand": "pwsh -NoProfile -Command 'Install-PSResource -Name InvokeBuild, Pester -TrustRepository -AcceptLicense -Verbose'",
 
-  // Restore .NET dependencies after container starts
-  "postStartCommand": "dotnet restore",
+  // Update PowerShell to latest stable and remove preview versions
+  //"postCreateCommand": "sudo apt-get update; sudo apt-get remove -y powershell-preview; sudo apt-get install -y powershell",
 
-  // Confirmation message
+  // Restore .NET dependencies, install latest MCP server
+  "postStartCommand": "dotnet restore && npm install -g @modelcontextprotocol/server-github@latest",
+
+  // Reinitialize C# extension and confirm setup
   "postAttachCommand": "pwsh -NoProfile -Command 'Write-Host \"Dev container ready. .NET SDK $(dotnet --version) and PowerShell $($PSVersionTable.PSVersion) available.\"'",
 
   "waitFor": "postAttachCommand",
