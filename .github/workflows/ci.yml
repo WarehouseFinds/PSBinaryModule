@@ -175,11 +175,38 @@ jobs:
       - name: Install Pester
         shell: pwsh
         run: |
-          Install-PSResource -Name Pester -TrustRepository -AcceptLicense
+          # Install latest Pester compatible with PowerShell 7.5.4 and .NET 10
+          Write-Host "Installing Pester..."
+          Install-PSResource -Name Pester -MinimumVersion 5.9.0 -TrustRepository -AcceptLicense -Force
+
+          # Verify installation
+          $pesterModule = Get-Module Pester -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
+          Write-Host "Pester version installed: $($pesterModule.Version)"
 
       - name: Run Integration Tests
         shell: pwsh
+        env:
+          DOTNET_ROOT: ${{ env.DOTNET_ROOT }}
         run: |
+          # Ensure assembly resolution can find .NET 10 runtime
+          Write-Host "DOTNET_ROOT: $env:DOTNET_ROOT"
+          Write-Host "PowerShell Version: $($PSVersionTable.PSVersion)"
+
+          # Pre-load .NET runtime information for assembly resolution
+          if ($env:DOTNET_ROOT) {
+            $netRuntimePath = Join-Path $env:DOTNET_ROOT 'shared/Microsoft.NETCore.App'
+            if (Test-Path $netRuntimePath) {
+              Write-Host ".NET runtime found at: $netRuntimePath"
+              # List available versions
+              Get-ChildItem $netRuntimePath | ForEach-Object { Write-Host "  - $_" }
+
+              # Ensure DOTNET_ROOT is available in the environment for child processes
+              $env:DOTNET_ROOT = $env:DOTNET_ROOT
+            } else {
+              Write-Host "Warning: .NET runtime path not found: $netRuntimePath"
+            }
+          }
+
           $config = New-PesterConfiguration @{
               Run        = @{
                   Path     = './tests/Integration'
@@ -197,6 +224,8 @@ jobs:
                   Verbosity = 'Detailed'
               }
           }
+
+          Write-Host "Running Pester with DOTNET_ROOT=$env:DOTNET_ROOT"
           Invoke-Pester -Configuration $config
 
       - name: Upload test results
