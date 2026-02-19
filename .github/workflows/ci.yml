@@ -135,11 +135,19 @@ jobs:
           Write-Host "DOTNET_ROOT set to: $dotnetRoot"
         shell: pwsh
 
-      - name: Download all build artifacts
-        uses: actions/download-artifact@v5
-        with:
-          name: PSBinaryModule
-          path: build/out/PSBinaryModule
+      - name: Build Module (Platform-Specific)
+        shell: pwsh
+        run: |
+          Write-Host "Building module on $env:RUNNER_OS..."
+          # Use InvokeBuild to build the module for this specific platform
+          if (Get-Command Invoke-Build -ErrorAction SilentlyContinue) {
+            Invoke-Build -Task Build
+          } else {
+            Write-Host "Installing InvokeBuild..."
+            Install-Module InvokeBuild -Force -SkipPublisherCheck
+            Invoke-Build -Task Build
+          }
+          Write-Host "Module build complete"
 
       - name: Setup PowerShell
         shell: bash
