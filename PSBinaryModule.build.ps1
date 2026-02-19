@@ -178,6 +178,57 @@ task Build Compile, {
         Copy-Item -Path $_.FullName -Destination $outputPath -Force
     }
 
+    # Copy the deps.json file which helps with assembly resolution
+    $depsFile = Join-Path -Path $binPath -ChildPath "$moduleName.deps.json"
+    if (Test-Path $depsFile) {
+        Copy-Item -Path $depsFile -Destination $outputPath -Force
+    }
+
+    # For .NET 10 modules, copy framework assemblies that PowerShell reflection needs
+    # Check environment variable or discover .NET root from common locations
+    $dotnetRoot = $env:DOTNET_ROOT
+    
+    if (-not $dotnetRoot) {
+        # Check common .NET installation locations
+        $candidates = @('/usr/share/dotnet', '/usr/local/share/dotnet', 'C:\Program Files\dotnet', 'C:\Program Files (x86)\dotnet')
+        foreach ($candidate in $candidates) {
+            if (Test-Path $candidate) {
+                $runtimeCheck = Join-Path $candidate 'shared/Microsoft.NETCore.App/10*'
+                if (Test-Path $runtimeCheck) {
+                    $dotnetRoot = $candidate
+                    break
+                }
+            }
+        }
+    }
+
+    # Copy framework assemblies if .NET installation is found
+    if ($dotnetRoot -and (Test-Path $dotnetRoot)) {
+        $runtimePath = Join-Path $dotnetRoot 'shared/Microsoft.NETCore.App'
+        
+        # Find the latest .NET 10.x runtime
+        if (Test-Path $runtimePath) {
+            $runtimeVersions = @(Get-ChildItem -Path $runtimePath -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^10\.' } | Sort-Object Name -Descending)
+            
+            if ($runtimeVersions) {
+                $latestRuntime = $runtimeVersions[0]
+                Write-Build Green "Copying .NET runtime assemblies from: $($latestRuntime.FullName)"
+                
+                # Copy critical framework assemblies needed by .NET 10 modules
+                $assembliesToCopy = @('System.Runtime.dll', 'System.IO.Packaging.dll', 'System.Data.SqlClient.dll')
+                foreach ($assembly in $assembliesToCopy) {
+                    $assemblyPath = Join-Path $latestRuntime.FullName $assembly
+                    if (Test-Path $assemblyPath) {
+                        Copy-Item -Path $assemblyPath -Destination $outputPath -Force -ErrorAction SilentlyContinue
+                        Write-Build Gray "  Copied $assembly"
+                    }
+                }
+            }
+        }
+    } else {
+        Write-Build Yellow 'Warning: Could not locate .NET 10 installation. Framework assemblies may not be available.'
+    }
+
     Write-Build Green "Module built successfully at: $outputPath"
 }
 

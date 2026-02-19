@@ -139,19 +139,31 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "Building module on $env:RUNNER_OS..."
-          # Use InvokeBuild to build the module for this specific platform
+          Write-Host "Configuration: Release"
+
+          # First restore and compile with dotnet to ensure all dependencies are copied
+          Write-Host ""
+          Write-Host "Restoring NuGet dependencies..."
+          & dotnet restore './PSBinaryModule.sln'
+
+          Write-Host "Compiling C# project..."
+          & dotnet build './PSBinaryModule.sln' --configuration Release --no-restore
+
+          # Then use InvokeBuild to package the module
+          Write-Host "Building module with InvokeBuild..."
           if (Get-Command Invoke-Build -ErrorAction SilentlyContinue) {
-            Invoke-Build -Task Build
+            Invoke-Build -Task Build -Configuration Release
           } else {
             Write-Host "Installing InvokeBuild..."
             Install-Module InvokeBuild -Force -SkipPublisherCheck
-            Invoke-Build -Task Build
+            Invoke-Build -Task Build -Configuration Release
           }
 
           # Verify the build output exists and show contents
           $modulePath = './build/out/PSBinaryModule/PSBinaryModule.psd1'
           if (Test-Path $modulePath) {
-            Write-Host "Module manifest found at: $modulePath"
+            Write-Host ""
+            Write-Host "✓ Module manifest found at: $modulePath"
             Write-Host ""
             Write-Host "Module output directory contents:"
             Get-ChildItem -Path './build/out/PSBinaryModule/' | ForEach-Object {
@@ -174,7 +186,32 @@ jobs:
             throw "Build failed or module not created"
           }
           Write-Host ""
-          pwsh -c '[System.Runtime.InteropServices.RuntimeInformation]::OSDescription'
+          Write-Host "Module build complete"
+
+      - name: Verify Module Dependencies
+        shell: pwsh
+        run: |
+          Write-Host "=== Detailed Module Contents ==="
+          $moduleDir = './build/out/PSBinaryModule'
+          Get-ChildItem -Path $moduleDir -File | Sort-Object Name | ForEach-Object {
+            Write-Host "$($_.Name) ($([Math]::Round($_.Length / 1MB, 2)) MB)"
+          }
+
+          Write-Host ""
+          Write-Host "Checking for System.Runtime.dll..."
+          if (Test-Path "$moduleDir/System.Runtime.dll") {
+            Write-Host "  FOUND: System.Runtime.dll"
+          } else {
+            Write-Host "  MISSING: System.Runtime.dll"
+          }
+
+          Write-Host ""
+          Write-Host "Checking bin directory for dependencies..."
+          $binDir = './src/bin/Release'
+          Write-Host "Contents of $binDir":"
+          Get-ChildItem -Path $binDir -Filter '*.dll' | Sort-Object Name | ForEach-Object {
+            Write-Host "  - $($_.Name)"
+          }
 
       - name: Install PowerShell 7.5.4
         shell: pwsh
