@@ -154,6 +154,24 @@ jobs:
           pwsh -c '$PSVersionTable | Select-Object PSVersion, OS'
           pwsh -c '[System.Runtime.InteropServices.RuntimeInformation]::OSDescription'
 
+      - name: Install PowerShell 7.5.4
+        shell: pwsh
+        run: |
+          # PowerShell 7.5.4 installation
+          if ($env:RUNNER_OS -eq 'Linux') {
+            # Ubuntu/Linux
+            & sudo apt-get update
+            & sudo apt-get install -y powershell 2>$null || Write-Host "PowerShell install attempt completed"
+          } elseif ($env:RUNNER_OS -eq 'macOS') {
+            # macOS - ensure latest PowerShell is available
+            & brew install --cask powershell 2>$null || Write-Host "PowerShell install attempt completed"
+          } else {
+            # Windows - PowerShell is already available
+            Write-Host "PowerShell already available on Windows"
+          }
+          # Verify installation
+          & pwsh --version
+
       - name: Install Pester
         shell: pwsh
         run: |
