@@ -178,7 +178,7 @@ task Build Compile, {
         Copy-Item -Path $_.FullName -Destination $outputPath -Force
     }
 
-    # Copy System.Runtime.dll from the .NET runtime
+    # Copy framework assemblies from .NET runtime for self-contained distribution
     $dotnetRoot = $env:DOTNET_ROOT
     if (-not $dotnetRoot) {
         $dotnetInfo = & dotnet --info
@@ -191,9 +191,10 @@ task Build Compile, {
     if ($dotnetRoot) {
         $runtimeDirs = Get-ChildItem -Path "$dotnetRoot/shared/Microsoft.NETCore.App" -Directory | Sort-Object -Property Name -Descending
         if ($runtimeDirs) {
-            $systemRuntime = Join-Path -Path $runtimeDirs[0].FullName -ChildPath 'System.Runtime.dll'
-            if (Test-Path $systemRuntime) {
-                Copy-Item -Path $systemRuntime -Destination $outputPath -Force
+            $frameworkDir = $runtimeDirs[0].FullName
+            # Copy all System.* framework assemblies for self-contained module
+            Get-ChildItem -Path $frameworkDir -Filter 'System.*.dll' | ForEach-Object {
+                Copy-Item -Path $_.FullName -Destination $outputPath -Force
             }
         }
     }
