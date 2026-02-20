@@ -126,197 +126,38 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Set DOTNET_ROOT for PowerShell
-        run: |
-          # Get actual SDK installation directory from dotnet info
-          $dotnetInfo = & dotnet --info
-          $sdkPath = $dotnetInfo | Select-String "Base Path:" | ForEach-Object { $_.Line -replace '.*Base Path:\s*', '' }
-
-          if ($sdkPath) {
-            # Extract the root directory (parent of the sdk version directory)
-            $dotnetRoot = Split-Path -Parent (Split-Path -Parent $sdkPath)
-            echo "DOTNET_ROOT=$dotnetRoot" >> $GITHUB_ENV
-            Write-Host "Found SDK at: $sdkPath"
-            Write-Host "DOTNET_ROOT set to: $dotnetRoot"
-          } else {
-            # Fallback: try to use DOTNET_ROOT environment variable already set by setup-dotnet
-            if ($env:DOTNET_ROOT) {
-              echo "DOTNET_ROOT=$env:DOTNET_ROOT" >> $GITHUB_ENV
-              Write-Host "Using DOTNET_ROOT from environment: $env:DOTNET_ROOT"
-            } else {
-              Write-Host "ERROR: Could not determine DOTNET_ROOT"
-            }
-          }
-
-          # Also set ARM64 variant for macOS
-          if ($env:RUNNER_OS -eq 'macOS') {
-            $dotnetRoot = (& dotnet --info | Select-String "Base Path:" | ForEach-Object { $_.Line -replace '.*Base Path:\s*', '' } | ForEach-Object { Split-Path -Parent (Split-Path -Parent $_) })
-            if ($dotnetRoot) {
-              echo "DOTNET_ROOT_ARM64=$dotnetRoot" >> $GITHUB_ENV
-              Write-Host "DOTNET_ROOT_ARM64 set to: $dotnetRoot"
-            }
-          }
-        shell: pwsh
-
-      - name: Build Module (Platform-Specific)
+      - name: Build Module
         shell: pwsh
         run: |
-          Write-Host "Building module on $env:RUNNER_OS..."
-          Write-Host "Configuration: Release"
-
-          # First restore and compile with dotnet to ensure all dependencies are copied
-          Write-Host ""
-          Write-Host "Restoring NuGet dependencies..."
-          & dotnet restore './PSBinaryModule.sln'
-
-          Write-Host "Compiling C# project..."
-          & dotnet build './PSBinaryModule.sln' --configuration Release --no-restore
-
-          # Then use InvokeBuild to package the module
-          Write-Host "Building module with InvokeBuild..."
+          dotnet restore './PSBinaryModule.sln'
+          dotnet build './PSBinaryModule.sln' --configuration Release --no-restore
+          
           if (Get-Command Invoke-Build -ErrorAction SilentlyContinue) {
             Invoke-Build -Task Build -Configuration Release
           } else {
-            Write-Host "Installing InvokeBuild..."
             Install-Module InvokeBuild -Force -SkipPublisherCheck
             Invoke-Build -Task Build -Configuration Release
           }
 
-          # Verify the build output exists and show contents
-          $modulePath = './build/out/PSBinaryModule/PSBinaryModule.psd1'
-          if (Test-Path $modulePath) {
-            Write-Host ""
-            Write-Host "✓ Module manifest found at: $modulePath"
-            Write-Host ""
-            Write-Host "Module output directory contents:"
-            Get-ChildItem -Path './build/out/PSBinaryModule/' | ForEach-Object {
-              Write-Host "  - $($_.Name)"
-            }
-
-            $dllPath = './build/out/PSBinaryModule/PSBinaryModule.dll'
-            if (Test-Path $dllPath) {
-              Write-Host ""
-              Write-Host "Module DLL found: $dllPath"
-              Write-Host "Checking assembly name..."
-              [Reflection.AssemblyName]::GetAssemblyName($dllPath) | ForEach-Object {
-                Write-Host "  Name: $($_.Name), Version: $($_.Version)"
-              }
-            }
-          } else {
-            Write-Host "ERROR: Module not found at expected path: $modulePath"
-            Write-Host "Build output contents:"
-            Get-ChildItem -Path './build/out/' -Recurse | Format-Table FullName
-            throw "Build failed or module not created"
-          }
-          Write-Host ""
-          Write-Host "Module build complete"
-
-      - name: Verify Module Dependencies
+      - name: Install PowerShell
         shell: pwsh
         run: |
-          Write-Host "=== Detailed Module Contents ==="
-          $moduleDir = './build/out/PSBinaryModule'
-          Get-ChildItem -Path $moduleDir -File | Sort-Object Name | ForEach-Object {
-            Write-Host "$($_.Name) ($([Math]::Round($_.Length / 1MB, 2)) MB)"
-          }
-
-          Write-Host ""
-          Write-Host "Checking for System.Runtime.dll..."
-          if (Test-Path "$moduleDir/System.Runtime.dll") {
-            Write-Host "  FOUND: System.Runtime.dll"
-          } else {
-            Write-Host "  MISSING: System.Runtime.dll"
-          }
-
-          Write-Host ""
-          Write-Host "Checking bin directory for dependencies..."
-          $binDir = './src/bin/Release'
-          Write-Host "Contents of ${binDir}:"
-          Get-ChildItem -Path $binDir -Filter '*.dll' | Sort-Object Name | ForEach-Object {
-            Write-Host "  - $($_.Name)"
-          }
-
-      - name: Install PowerShell 7.5.4
-        shell: pwsh
-        run: |
-          # PowerShell 7.5.4 installation
           if ($env:RUNNER_OS -eq 'Linux') {
-            # Ubuntu/Linux
-            & sudo apt-get update
-            & sudo apt-get install -y powershell 2>$null || Write-Host "PowerShell install attempt completed"
+            sudo apt-get update
+            sudo apt-get install -y powershell
           } elseif ($env:RUNNER_OS -eq 'macOS') {
-            # macOS - ensure latest PowerShell is available
-            & brew install --cask powershell 2>$null || Write-Host "PowerShell install attempt completed"
-          } else {
-            # Windows - PowerShell is already available
-            Write-Host "PowerShell already available on Windows"
+            brew install --cask powershell
           }
-          # Verify installation
-          & pwsh --version
 
       - name: Install Pester
         shell: pwsh
         run: |
-          Write-Host "Setting up Pester..."
-
-          # Remove any existing Pester versions
-          Remove-Module Pester -Force -ErrorAction SilentlyContinue
-          Get-Module Pester -ListAvailable | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
-
-          Write-Host "Installing latest Pester..."
-          Install-PSResource -Name Pester -TrustRepository -AcceptLicense
-
-          # Verify and load new version
-          $pesterModule = Get-Module Pester -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
-          Write-Host "Pester version available: $($pesterModule.Version)"
-          Import-Module Pester -Force -PassThru | Select-Object Name, Version
+          Install-Module Pester -Force -SkipPublisherCheck
 
       - name: Run Integration Tests
         shell: pwsh
-        env:
-          DOTNET_ROOT: ${{ env.DOTNET_ROOT }}
-          DOTNET_ROOT_ARM64: ${{ env.DOTNET_ROOT_ARM64 }}
-          DOTNET_MULTILEVEL_LOOKUP: 1
         run: |
-          Write-Host "=== Running Integration Tests ==="
-          Write-Host "PowerShell: $($PSVersionTable.PSVersion)"
-          Write-Host "OS: $($PSVersionTable.OS)"
-          Write-Host "DOTNET_ROOT: $env:DOTNET_ROOT"
-          Write-Host "DOTNET_ROOT_ARM64: $env:DOTNET_ROOT_ARM64"
-          Write-Host "DOTNET_MULTILEVEL_LOOKUP: $env:DOTNET_MULTILEVEL_LOOKUP"
-
-          # Verify .NET runtime is accessible
-          if ($env:DOTNET_ROOT -and (Test-Path "$env:DOTNET_ROOT/shared/Microsoft.NETCore.App")) {
-            Write-Host ""
-            Write-Host ".NET Runtime Versions:"
-            Get-ChildItem "$env:DOTNET_ROOT/shared/Microsoft.NETCore.App" | ForEach-Object {
-              Write-Host "  - $($_.Name)"
-
-              # Check for System.Runtime.dll in this version
-              $runtimeDir = Join-Path $env:DOTNET_ROOT "shared/Microsoft.NETCore.App/$($_.Name)"
-              if (Test-Path "$runtimeDir/System.Runtime.dll") {
-                Write-Host "    ✓ System.Runtime.dll found"
-              } else {
-                Write-Host "    ✗ System.Runtime.dll NOT found"
-              }
-            }
-          } else {
-            Write-Host ""
-            Write-Host "WARNING: DOTNET_ROOT not set or runtime directory not found"
-            Write-Host "Attempting to locate .NET runtime..."
-            if (Test-Path "/usr/local/share/dotnet/shared/Microsoft.NETCore.App") {
-              Write-Host "Found in /usr/local/share/dotnet"
-              $env:DOTNET_ROOT = "/usr/local/share/dotnet"
-            }
-          }
-
-          # Import Pester
           Import-Module Pester
-          Write-Host ""
-          Write-Host "Pester version: $(Get-Module Pester | Select-Object -ExpandProperty Version)"
-          Write-Host ""
-
-          # Run the tests
           $config = New-PesterConfiguration @{
               Run        = @{
                   Path     = './tests/Integration'
@@ -334,8 +175,6 @@ jobs:
                   Verbosity = 'Detailed'
               }
           }
-
-
           Invoke-Pester -Configuration $config
       - name: Upload test results
         uses: actions/upload-artifact@v6
