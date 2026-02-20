@@ -191,7 +191,21 @@ task Build Compile, {
     if ($dotnetRoot) {
         $runtimeDirs = Get-ChildItem -Path "$dotnetRoot/shared/Microsoft.NETCore.App" -Directory | Sort-Object -Property Name -Descending
         if ($runtimeDirs) {
-            $frameworkDir = $runtimeDirs[0].FullName
+            # Use the first (most recent) runtime version that matches the target framework
+            $frameworkDir = $null
+            foreach ($runtimeDir in $runtimeDirs) {
+                # Prefer .NET 10.x versions
+                if ($runtimeDir.Name -match '^10\.') {
+                    $frameworkDir = $runtimeDir.FullName
+                    break
+                }
+            }
+
+            # Fallback to most recent if no 10.x found
+            if (-not $frameworkDir) {
+                $frameworkDir = $runtimeDirs[0].FullName
+            }
+
             # Copy all System.* framework assemblies for self-contained module
             Get-ChildItem -Path $frameworkDir -Filter 'System.*.dll' | ForEach-Object {
                 Copy-Item -Path $_.FullName -Destination $outputPath -Force
