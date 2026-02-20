@@ -70,13 +70,6 @@ runs:
         [void] (Import-Module InvokeBuild)
         Invoke-Build -NugetApiKey ${{ env.PSGALLERY_API_KEY }} -Task Publish
 
-    - name: Create NuGet package from build artifacts
-      shell: pwsh
-      run: |
-        Set-StrictMode -Version Latest
-        [void] (Import-Module InvokeBuild)
-        Invoke-Build -Task Package
-
     - name: Upload build package to Github Release
       uses: actions/upload-release-asset@v1
       with:
