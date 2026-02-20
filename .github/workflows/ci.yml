@@ -76,7 +76,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Restore dependencies
         run: dotnet restore
@@ -124,22 +124,55 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
-      - name: Download all build artifacts
-        uses: actions/download-artifact@v5
-        with:
-          name: PSBinaryModule
-          path: build/out/PSBinaryModule
-
-      - name: Setup PowerShell
+      - name: Build Module
         shell: pwsh
         run: |
-          Install-PSResource -Name Pester -TrustRepository -AcceptLicense
+          dotnet restore './PSBinaryModule.sln'
+          dotnet build './PSBinaryModule.sln' --configuration Release --no-restore
+
+          if (Get-Command Invoke-Build -ErrorAction SilentlyContinue) {
+            Invoke-Build -Task Build -Configuration Release
+          } else {
+            Install-Module InvokeBuild -Force -SkipPublisherCheck
+            Invoke-Build -Task Build -Configuration Release
+          }
+
+      - name: Install PowerShell
+        shell: pwsh
+        run: |
+          if ($env:RUNNER_OS -eq 'Linux') {
+            sudo apt-get update
+            sudo apt-get install -y powershell
+          } elseif ($env:RUNNER_OS -eq 'macOS') {
+            brew install --cask powershell
+          }
+
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          Install-Module Pester -Force -SkipPublisherCheck
+
+      - name: Configure .NET Environment
+        shell: pwsh
+        run: |
+          $dotnetInfo = & dotnet --info
+          $sdkPath = $dotnetInfo | Select-String "Base Path:" | ForEach-Object { $_.Line -replace '.*Base Path:\s*', '' }
+          if ($sdkPath) {
+            $dotnetRoot = Split-Path -Parent (Split-Path -Parent $sdkPath)
+            echo "DOTNET_ROOT=$dotnetRoot" >> $env:GITHUB_ENV
+            echo "DOTNET_MULTILEVEL_LOOKUP=1" >> $env:GITHUB_ENV
+            Write-Host "DOTNET_ROOT set to: $dotnetRoot"
+          }
 
       - name: Run Integration Tests
         shell: pwsh
+        env:
+          DOTNET_ROOT: ${{ env.DOTNET_ROOT }}
+          DOTNET_MULTILEVEL_LOOKUP: ${{ env.DOTNET_MULTILEVEL_LOOKUP }}
         run: |
+          Import-Module Pester
           $config = New-PesterConfiguration @{
               Run        = @{
                   Path     = './tests/Integration'
@@ -158,7 +191,6 @@ jobs:
               }
           }
           Invoke-Pester -Configuration $config
-
       - name: Upload test results
         uses: actions/upload-artifact@v6
         if: always()

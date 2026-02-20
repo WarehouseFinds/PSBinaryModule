@@ -55,7 +55,7 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ github.event.repository.name }}.${{ steps.gitversion.outputs.MajorMinorPatch }}.nupkg
-        path: /build/package/${{ github.event.repository.name }}.${{ steps.gitversion.outputs.MajorMinorPatch }}.nupkg
+        path: build/package/${{ github.event.repository.name }}.${{ steps.gitversion.outputs.MajorMinorPatch }}.nupkg
 
     - name: Upload module bin artifacts
       id: upload_bin
