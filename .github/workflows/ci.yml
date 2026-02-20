@@ -154,20 +154,8 @@ jobs:
         run: |
           Install-Module Pester -Force -SkipPublisherCheck
 
-      - name: Set DOTNET_ROOT
-        shell: pwsh
-        run: |
-          $dotnetInfo = & dotnet --info
-          $sdkPath = $dotnetInfo | Select-String "Base Path:" | ForEach-Object { $_.Line -replace '.*Base Path:\s*', '' }
-          if ($sdkPath) {
-            $dotnetRoot = Split-Path -Parent (Split-Path -Parent $sdkPath)
-            echo "DOTNET_ROOT=$dotnetRoot" >> $env:GITHUB_ENV
-          }
-
       - name: Run Integration Tests
         shell: pwsh
-        env:
-          DOTNET_MULTILEVEL_LOOKUP: 1
         run: |
           Import-Module Pester
           $config = New-PesterConfiguration @{

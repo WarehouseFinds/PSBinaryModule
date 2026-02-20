@@ -169,13 +169,33 @@ task Build Compile, {
         Copy-Item -Path "$helpPath/*" -Destination $outputHelpPath -Recurse -Force
     }
 
-    # Copy dependencies (including System.* and Microsoft.* for .NET 10 compatibility)
+    # Copy dependencies
     $binPath = Join-Path -Path $srcPath -ChildPath "bin/$Configuration"
     Get-ChildItem -Path $binPath -Filter '*.dll' | Where-Object {
         $_.Name -ne "$moduleName.dll" -and
         $_.Name -ne 'PowerShellStandard.Library.dll'
     } | ForEach-Object {
         Copy-Item -Path $_.FullName -Destination $outputPath -Force
+    }
+
+    # Copy System.Runtime.dll from the .NET runtime
+    $dotnetRoot = $env:DOTNET_ROOT
+    if (-not $dotnetRoot) {
+        $dotnetInfo = & dotnet --info
+        $sdkPath = $dotnetInfo | Select-String 'Base Path:' | ForEach-Object { $_.Line -replace '.*Base Path:\s*', '' }
+        if ($sdkPath) {
+            $dotnetRoot = Split-Path -Parent (Split-Path -Parent $sdkPath)
+        }
+    }
+
+    if ($dotnetRoot) {
+        $runtimeDirs = Get-ChildItem -Path "$dotnetRoot/shared/Microsoft.NETCore.App" -Directory | Sort-Object -Property Name -Descending
+        if ($runtimeDirs) {
+            $systemRuntime = Join-Path -Path $runtimeDirs[0].FullName -ChildPath 'System.Runtime.dll'
+            if (Test-Path $systemRuntime) {
+                Copy-Item -Path $systemRuntime -Destination $outputPath -Force
+            }
+        }
     }
 
     # Copy the deps.json file which helps with assembly resolution
