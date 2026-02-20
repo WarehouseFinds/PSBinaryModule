@@ -184,44 +184,6 @@ task Build Compile, {
         Copy-Item -Path $depsFile -Destination $outputPath -Force
     }
 
-    # Copy System.Runtime.dll from the .NET runtime to the module folder
-    # This is required for .NET 10 modules to work on all platforms
-    $dotnetRoot = $env:DOTNET_ROOT
-    if (-not $dotnetRoot) {
-        # Try common .NET installation locations
-        foreach ($candidate in @('/usr/share/dotnet', '/usr/local/share/dotnet', 'C:\Program Files\dotnet', 'C:\Program Files (x86)\dotnet')) {
-            if (Test-Path $candidate) {
-                $runtimePath = Join-Path $candidate 'shared/Microsoft.NETCore.App'
-                if (Test-Path $runtimePath) {
-                    $dotnetRoot = $candidate
-                    break
-                }
-            }
-        }
-    }
-
-    if ($dotnetRoot) {
-        $runtimePath = Join-Path $dotnetRoot 'shared/Microsoft.NETCore.App'
-        # Find the latest .NET 10.x runtime version
-        $runtimeVersions = @(Get-ChildItem -Path $runtimePath -Directory -ErrorAction SilentlyContinue |
-                Where-Object { $_.Name -match '^10\.' } |
-                Sort-Object Name -Descending)
-
-        if ($runtimeVersions) {
-            $latestRuntime = $runtimeVersions[0].FullName
-            $systemRuntimePath = Join-Path $latestRuntime 'System.Runtime.dll'
-
-            if (Test-Path $systemRuntimePath) {
-                Copy-Item -Path $systemRuntimePath -Destination $outputPath -Force
-                Write-Build Green "  Copied System.Runtime.dll from $($runtimeVersions[0].Name)"
-            }
-        } else {
-            Write-Build Yellow "  Warning: No .NET 10.x runtime found in $runtimePath"
-        }
-    } else {
-        Write-Build Yellow '  Warning: DOTNET_ROOT not set and no .NET installation found'
-    }
-
     Write-Build Green "Module built successfully at: $outputPath"
 }
 

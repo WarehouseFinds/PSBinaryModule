@@ -128,11 +128,34 @@ jobs:
 
       - name: Set DOTNET_ROOT for PowerShell
         run: |
-          $dotnetPath = Get-Command dotnet | Select-Object -ExpandProperty Source
-          $dotnetRoot = Split-Path -Parent $dotnetPath
-          echo "DOTNET_ROOT=$dotnetRoot" >> $GITHUB_ENV
-          Write-Host "Found dotnet at: $dotnetPath"
-          Write-Host "DOTNET_ROOT set to: $dotnetRoot"
+          # Get actual SDK installation directory from dotnet info
+          $dotnetInfo = & dotnet --info
+          $sdkPath = $dotnetInfo | Select-String "Base Path:" | ForEach-Object { $_.Line -replace '.*Base Path:\s*', '' }
+
+          if ($sdkPath) {
+            # Extract the root directory (parent of the sdk version directory)
+            $dotnetRoot = Split-Path -Parent (Split-Path -Parent $sdkPath)
+            echo "DOTNET_ROOT=$dotnetRoot" >> $GITHUB_ENV
+            Write-Host "Found SDK at: $sdkPath"
+            Write-Host "DOTNET_ROOT set to: $dotnetRoot"
+          } else {
+            # Fallback: try to use DOTNET_ROOT environment variable already set by setup-dotnet
+            if ($env:DOTNET_ROOT) {
+              echo "DOTNET_ROOT=$env:DOTNET_ROOT" >> $GITHUB_ENV
+              Write-Host "Using DOTNET_ROOT from environment: $env:DOTNET_ROOT"
+            } else {
+              Write-Host "ERROR: Could not determine DOTNET_ROOT"
+            }
+          }
+
+          # Also set ARM64 variant for macOS
+          if ($env:RUNNER_OS -eq 'macOS') {
+            $dotnetRoot = (& dotnet --info | Select-String "Base Path:" | ForEach-Object { $_.Line -replace '.*Base Path:\s*', '' } | ForEach-Object { Split-Path -Parent (Split-Path -Parent $_) })
+            if ($dotnetRoot) {
+              echo "DOTNET_ROOT_ARM64=$dotnetRoot" >> $GITHUB_ENV
+              Write-Host "DOTNET_ROOT_ARM64 set to: $dotnetRoot"
+            }
+          }
         shell: pwsh
 
       - name: Build Module (Platform-Specific)
@@ -252,16 +275,44 @@ jobs:
         shell: pwsh
         env:
           DOTNET_ROOT: ${{ env.DOTNET_ROOT }}
-          DOTNET_ROOT_ARM64: ${{ env.DOTNET_ROOT }}
+          DOTNET_ROOT_ARM64: ${{ env.DOTNET_ROOT_ARM64 }}
+          DOTNET_MULTILEVEL_LOOKUP: 1
         run: |
           Write-Host "=== Running Integration Tests ==="
           Write-Host "PowerShell: $($PSVersionTable.PSVersion)"
           Write-Host "OS: $($PSVersionTable.OS)"
           Write-Host "DOTNET_ROOT: $env:DOTNET_ROOT"
           Write-Host "DOTNET_ROOT_ARM64: $env:DOTNET_ROOT_ARM64"
+          Write-Host "DOTNET_MULTILEVEL_LOOKUP: $env:DOTNET_MULTILEVEL_LOOKUP"
+
+          # Verify .NET runtime is accessible
+          if ($env:DOTNET_ROOT -and (Test-Path "$env:DOTNET_ROOT/shared/Microsoft.NETCore.App")) {
+            Write-Host ""
+            Write-Host ".NET Runtime Versions:"
+            Get-ChildItem "$env:DOTNET_ROOT/shared/Microsoft.NETCore.App" | ForEach-Object {
+              Write-Host "  - $($_.Name)"
+
+              # Check for System.Runtime.dll in this version
+              $runtimeDir = Join-Path $env:DOTNET_ROOT "shared/Microsoft.NETCore.App/$($_.Name)"
+              if (Test-Path "$runtimeDir/System.Runtime.dll") {
+                Write-Host "    ✓ System.Runtime.dll found"
+              } else {
+                Write-Host "    ✗ System.Runtime.dll NOT found"
+              }
+            }
+          } else {
+            Write-Host ""
+            Write-Host "WARNING: DOTNET_ROOT not set or runtime directory not found"
+            Write-Host "Attempting to locate .NET runtime..."
+            if (Test-Path "/usr/local/share/dotnet/shared/Microsoft.NETCore.App") {
+              Write-Host "Found in /usr/local/share/dotnet"
+              $env:DOTNET_ROOT = "/usr/local/share/dotnet"
+            }
+          }
 
           # Import Pester
           Import-Module Pester
+          Write-Host ""
           Write-Host "Pester version: $(Get-Module Pester | Select-Object -ExpandProperty Version)"
           Write-Host ""
 
@@ -283,6 +334,7 @@ jobs:
                   Verbosity = 'Detailed'
               }
           }
+
 
           Invoke-Pester -Configuration $config
       - name: Upload test results
