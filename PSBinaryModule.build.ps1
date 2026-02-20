@@ -178,41 +178,6 @@ task Build Compile, {
         Copy-Item -Path $_.FullName -Destination $outputPath -Force
     }
 
-    # Copy framework assemblies from .NET runtime for self-contained distribution
-    $dotnetRoot = $env:DOTNET_ROOT
-    if (-not $dotnetRoot) {
-        $dotnetInfo = & dotnet --info
-        $sdkPath = $dotnetInfo | Select-String 'Base Path:' | ForEach-Object { $_.Line -replace '.*Base Path:\s*', '' }
-        if ($sdkPath) {
-            $dotnetRoot = Split-Path -Parent (Split-Path -Parent $sdkPath)
-        }
-    }
-
-    if ($dotnetRoot) {
-        $runtimeDirs = Get-ChildItem -Path "$dotnetRoot/shared/Microsoft.NETCore.App" -Directory | Sort-Object -Property Name -Descending
-        if ($runtimeDirs) {
-            # Use the first (most recent) runtime version that matches the target framework
-            $frameworkDir = $null
-            foreach ($runtimeDir in $runtimeDirs) {
-                # Prefer .NET 10.x versions
-                if ($runtimeDir.Name -match '^10\.') {
-                    $frameworkDir = $runtimeDir.FullName
-                    break
-                }
-            }
-
-            # Fallback to most recent if no 10.x found
-            if (-not $frameworkDir) {
-                $frameworkDir = $runtimeDirs[0].FullName
-            }
-
-            # Copy all System.* framework assemblies for self-contained module
-            Get-ChildItem -Path $frameworkDir -Filter 'System.*.dll' | ForEach-Object {
-                Copy-Item -Path $_.FullName -Destination $outputPath -Force
-            }
-        }
-    }
-
     # Copy the deps.json file which helps with assembly resolution
     $depsFile = Join-Path -Path $binPath -ChildPath "$moduleName.deps.json"
     if (Test-Path $depsFile) {
