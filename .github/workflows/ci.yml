@@ -73,37 +73,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build solution
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Run C# unit tests
-        run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=unit-tests.trx" --collect "XPlat Code Coverage" --results-directory ./test-results
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: test-results-${{ matrix.os }}
-          path: test-results/
-
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always() && matrix.os == 'ubuntu-latest'
-        with:
-          job_summary: true
-          check_run: false
-          comment_mode: off
-          fail_on: test failures
-          files: test-results/**/*.trx
-          check_name: Unit Test Results
+      - name: Run Unit Tests
+        uses: ./.github/actions/ps-unit-tests
 
   integration-tests:
     name: Integration Tests
@@ -121,79 +92,5 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Build Module
-        shell: pwsh
-        run: |
-          dotnet restore './PSBinaryModule.sln'
-          dotnet build './PSBinaryModule.sln' --configuration Release --no-restore
-
-          if (Get-Command Invoke-Build -ErrorAction SilentlyContinue) {
-            Invoke-Build -Task Build -Configuration Release
-          } else {
-            Install-Module InvokeBuild -Force -SkipPublisherCheck
-            Invoke-Build -Task Build -Configuration Release
-          }
-
-      - name: Install PowerShell
-        shell: pwsh
-        run: |
-          if ($env:RUNNER_OS -eq 'Linux') {
-            sudo apt-get update
-            sudo apt-get install -y powershell
-          } elseif ($env:RUNNER_OS -eq 'macOS') {
-            brew install --cask powershell
-          }
-
-      - name: Install Pester
-        shell: pwsh
-        run: |
-          Install-Module Pester -Force -SkipPublisherCheck
-
-      - name: Configure .NET Environment
-        shell: pwsh
-        run: |
-          $dotnetInfo = & dotnet --info
-          $sdkPath = $dotnetInfo | Select-String "Base Path:" | ForEach-Object { $_.Line -replace '.*Base Path:\s*', '' }
-          if ($sdkPath) {
-            $dotnetRoot = Split-Path -Parent (Split-Path -Parent $sdkPath)
-            echo "DOTNET_ROOT=$dotnetRoot" >> $env:GITHUB_ENV
-            echo "DOTNET_MULTILEVEL_LOOKUP=1" >> $env:GITHUB_ENV
-            Write-Host "DOTNET_ROOT set to: $dotnetRoot"
-          }
-
       - name: Run Integration Tests
-        shell: pwsh
-        env:
-          DOTNET_ROOT: ${{ env.DOTNET_ROOT }}
-          DOTNET_MULTILEVEL_LOOKUP: ${{ env.DOTNET_MULTILEVEL_LOOKUP }}
-        run: |
-          Import-Module Pester
-          $config = New-PesterConfiguration @{
-              Run        = @{
-                  Path     = './tests/Integration'
-                  PassThru = $true
-              }
-              TestResult = @{
-                  Enabled      = $true
-                  OutputFormat = 'NUnitXml'
-                  OutputPath   = './test-results/integration-tests.xml'
-              }
-              Filter     = @{
-                  Tag = 'Integration'
-              }
-              Output     = @{
-                  Verbosity = 'Detailed'
-              }
-          }
-          Invoke-Pester -Configuration $config
-      - name: Upload test results
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: integration-test-results-${{ matrix.os }}
-          path: test-results/
+        uses: ./.github/actions/ps-integration-tests
