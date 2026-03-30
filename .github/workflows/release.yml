@@ -34,13 +34,13 @@ jobs:
           fetch-depth: 0
 
       - name: Install GitVersion tool
-        uses: gittools/actions/gitversion/setup@b3e1c2f9b6983393b289892d140d220011a58c4e
+        uses: gittools/actions/gitversion/setup@35de2db50983289eebad195dbb2f440fb7741745
         with:
           versionSpec: '6.5.1'
 
       - name: Get semantic build version
         id: gitversion
-        uses: gittools/actions/gitversion/execute@b3e1c2f9b6983393b289892d140d220011a58c4e
+        uses: gittools/actions/gitversion/execute@35de2db50983289eebad195dbb2f440fb7741745
         with:
           configFilePath: GitVersion.yml
           disableShallowCloneCheck: true
